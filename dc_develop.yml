@@ -1,0 +1,28 @@
+version: '3.7'
+
+services:
+  redis:
+    image: redis:alpine
+    command:
+      - redis-server
+    env_file:
+      - dev.env
+    restart: on-failure
+    volumes:
+      - redis_data:/data
+  app:
+    build: .
+#    command: python appapp.py
+    command: bash "run_dev.sh"
+    env_file:
+      - dev.env
+    restart: always
+    ports:
+      - "5556:5555"
+      - "8015:8015"
+    depends_on:
+      - redis
+    volumes:
+      - .:/app
+volumes:
+  redis_data:

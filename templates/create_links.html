@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+            font-size: 2em;
+            color: #333;
+        }
+        .upload-section {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            padding: 40px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .upload-area:hover {
+            border-color: #333;
+        }
+        .upload-area p {
+            margin: 0;
+            color: #777;
+        }
+        button {
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #555;
+        }
+        footer {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Upload Your Photos</h1>
+    </header>
+    <div class="upload-section">
+        <form id="upload-form" action="/create_links" method="post" enctype="multipart/form-data">
+            <div class="upload-area" id="upload-area">
+                <p>Drag & drop your ZIP file here or click to upload</p>
+                <input type="file" id="file-input" name="file" accept=".zip" style="display: none;">
+            </div>
+            <button type="submit">Upload</button>
+            <p id="status" style="margin-top: 20px;"></p>
+        </form>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const uploadForm = document.getElementById('upload-form');
+        const statusText = document.getElementById('status');
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#555';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '#ccc';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#ccc';
+            handleFiles(e.dataTransfer.files);
+        });
+
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', () => {
+            handleFiles(fileInput.files);
+        });
+
+        function handleFiles(files) {
+            if (files.length > 0 && files[0].type === 'application/zip') {
+                statusText.textContent = 'File selected: ' + files[0].name;
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(files[0]);
+                fileInput.files = dataTransfer.files;
+            } else {
+                statusText.textContent = 'Please upload a valid ZIP file.';
+            }
+        }
+
+        uploadForm.addEventListener('submit', (e) => {
+            if (fileInput.files.length === 0) {
+                e.preventDefault();
+                statusText.textContent = 'No file selected.';
+            } else {
+                statusText.textContent = 'Uploading and processing...';
+            }
+        });
+    </script>
+</body>
+</html>
