@@ -8,7 +8,7 @@ import openpyxl as xl
 from log_settings import log
 import shutil
 from uuid import UUID
-from config import r
+from db import r
 
 
 class CreatingLinks:

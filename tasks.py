@@ -6,11 +6,11 @@ from uuid import UUID
 from celery.schedules import crontab
 
 from analytics import Analytics, AnalyticsB2C
-from config import celery
+from celery_settings import celery
 from creating_links import CreatingLinks
 from log_settings import log
 from methods import get_date_from_redis
-from config import r
+from db import r
 from regru_task.regru_task import CrmUpdatesHandler
 
 
@@ -75,17 +75,17 @@ def handle_crm_updates():
         return 400, f"Error while handling updates form crm exc={exc}"
 
 
-@celery.on_after_finalize.connect
-def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(
-        crontab(hour="1", minute=30), sync_analytics.s()  # every hour at 0 minutes
-    )
-    sender.add_periodic_task(
-        crontab(hour="3", minute=0), sync_analytics_b2c.s()  # every hour at 0 minutes
-    )
-    sender.add_periodic_task(
-        crontab(hour="*/1", minute=30), expire_old_links.s()  # every hour at 30 minutes
-    )
-    sender.add_periodic_task(
-        crontab(minute="*/3"), handle_crm_updates.s()  # every 5 minutes
-    )
+# @celery.on_after_finalize.connect
+# def setup_periodic_tasks(sender, **kwargs):
+#     sender.add_periodic_task(
+#         crontab(hour="1", minute=30), sync_analytics.s()  # every hour at 0 minutes
+#     )
+#     sender.add_periodic_task(
+#         crontab(hour="3", minute=0), sync_analytics_b2c.s()  # every hour at 0 minutes
+#     )
+#     sender.add_periodic_task(
+#         crontab(hour="*/1", minute=30), expire_old_links.s()  # every hour at 30 minutes
+#     )
+#     sender.add_periodic_task(
+#         crontab(minute="*/3"), handle_crm_updates.s()  # every 5 minutes
+#     )

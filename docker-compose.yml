@@ -1,6 +1,13 @@
 version: '3.7'
 
 services:
+  db:
+    container_name: postgres
+    image: postgres
+    env_file:
+      - ./.env
+    volumes:
+      - db:/data/postgres  # todo maybe add ports
   redis:
     image: redis:alpine
     command:
@@ -21,6 +28,7 @@ services:
       - "8015:8015"
     depends_on:
       - redis
+      - db
     volumes:
       - ./log:/app/log
       - ./media:/app/media
@@ -29,3 +37,4 @@ services:
       - ./regru_task:/app/regru_task
 volumes:
   redis_data:
+  db:

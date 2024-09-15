@@ -3,9 +3,10 @@ from typing import Optional
 
 import retailcrm
 
-from config import celery, r
+from db import r
 from log_settings import log
 from datetime import datetime, timedelta
+from celery_settings import celery
 
 client = retailcrm.v5(os.getenv("RETAIL_CRM_URI"), os.getenv("RETAIL_CRM_TOKEN"))
 ALLOWED_EXTENSIONS = {"zip"}

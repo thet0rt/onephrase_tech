@@ -1,6 +1,15 @@
 version: '3.7'
 
 services:
+  db:
+    container_name: postgres
+    image: postgres
+    env_file:
+      - dev.env
+    volumes:
+      - db:/data/postgres
+    ports:
+      - "5433:5432"
   redis:
     image: redis:alpine
     command:
@@ -26,3 +35,4 @@ services:
       - .:/app
 volumes:
   redis_data:
+  db:

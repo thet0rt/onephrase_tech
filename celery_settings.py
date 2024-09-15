@@ -1,5 +1,4 @@
 from celery import Celery
-import redis
 import os
 
 celery = Celery(
@@ -8,5 +7,3 @@ celery = Celery(
     include=["methods", "tasks"],
     timezone="Europe/Moscow",
 )
-
-r = redis.Redis(host="redis", port=os.getenv("REDIS_PORT"), db=0)
