@@ -60,6 +60,19 @@
         .register-link:hover {
             text-decoration: underline;
         }
+        .flash {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            color: #fff;
+            font-weight: bold;
+        }
+        .flash-success {
+            background-color: #4caf50;
+        }
+        .flash-error {
+            background-color: #f44336;
+        }
         footer {
             margin-top: 20px;
             font-size: 0.9em;
@@ -69,6 +82,13 @@
 </head>
 <body>
     <div class="login-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
         <h1>Login</h1>
         <form action="/auth/login" method="post">
             <input type="text" name="username" placeholder="Username" required>
