@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Register</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -16,7 +16,7 @@
             justify-content: center;
             height: 100vh;
         }
-        .login-container {
+        .register-container {
             background: #fff;
             padding: 30px;
             border-radius: 10px;
@@ -30,7 +30,7 @@
             margin-bottom: 20px;
             font-size: 1.8em;
         }
-        input[type="text"], input[type="password"] {
+        input[type="text"], input[type="email"], input[type="password"] {
             width: 380px;
             padding: 10px;
             margin-bottom: 15px;
@@ -51,13 +51,13 @@
         button:hover {
             background-color: #555;
         }
-        .register-link {
+        .login-link {
             display: block;
             margin-top: 10px;
             color: #777;
             font-size: 0.9em;
         }
-        .register-link:hover {
+        .login-link:hover {
             text-decoration: underline;
         }
         .flash {
@@ -81,7 +81,7 @@
     </style>
 </head>
 <body>
-    <div class="login-container">
+    <div class="register-container">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -89,13 +89,15 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
-        <h1>Login</h1>
-        <form action="/auth/login" method="post">
+        <h1>Register</h1>
+        <form action="/auth/register" method="post">
             <input type="text" name="username" placeholder="Username" required>
+            <input type="email" name="email" placeholder="Email" required>
             <input type="password" name="password" placeholder="Password" required>
-            <button type="submit">Log In</button>
+            <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+            <button type="submit">Sign Up</button>
         </form>
-        <a href="#" class="register-link">Don't have an account? Sign up</a>
+        <a href="/auth/login" class="login-link">Already have an account? Log in</a>
     </div>
     <footer>
         <p>Contact Us | Privacy Policy</p>

@@ -1,5 +1,5 @@
 from . import auth_bp
-from flask import request, flash, redirect, url_for, render_template
+from flask import request, flash, redirect, url_for, render_template, Response
 from flask_login import login_user, logout_user
 from db import db
 from models import User
@@ -15,7 +15,7 @@ def login():
         if user and user.check_password(password):
             login_user(user)
             flash('Login successful', 'success')
-            return redirect(url_for('homepage'))
+            return redirect(url_for('admin.homepage'))
         else:
             flash('Invalid username or password', 'error')
     return render_template('login.html')
@@ -24,7 +24,35 @@ def login():
 @auth_bp.route('/logout')
 def logout():
     logout_user()
-    return redirect(url_for('login'))
+    return redirect(url_for('auth.login'))
 
-# @auth_bp.route('/register')
-# def register():
+
+@auth_bp.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+
+        if password != confirm_password:
+            flash('Passwords do not match', 'error')
+            return redirect(url_for('auth.register'))
+
+        if User.query.filter_by(username=username).first():
+            flash('Username already exists', 'error')
+            return redirect(url_for('auth.register'))
+
+        if User.query.filter_by(email=email).first():
+            flash('Email already registered', 'error')
+            return redirect(url_for('auth.register'))
+
+        new_user = User(username=username, email=email)
+        new_user.set_password(password)
+        db.session.add(new_user)
+        db.session.commit()
+
+        flash('Registration successful! Please log in.', 'success')
+        return redirect(url_for('auth.login'))
+    # return Response('ok', 200)
+    return render_template('registration.html')
