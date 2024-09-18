@@ -1,5 +1,5 @@
 from . import auth_bp
-from flask import request, flash, redirect, url_for, render_template, Response
+from flask import request, flash, redirect, url_for, render_template
 from flask_login import login_user, logout_user
 from db import db
 from models import User
@@ -54,5 +54,4 @@ def register():
 
         flash('Registration successful! Please log in.', 'success')
         return redirect(url_for('auth.login'))
-    # return Response('ok', 200)
     return render_template('registration.html')
