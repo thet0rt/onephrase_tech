@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
+import json
 import os
+from typing import Optional
+
+import gspread
 import requests
 import retailcrm
+from gspread import Spreadsheet
 
 from mail import send_email
 from log_settings import log
@@ -201,6 +206,35 @@ class RusPostMethods:
 class CrmMethods:
     client = retailcrm.v5(os.getenv("RETAIL_CRM_URI"), os.getenv("RETAIL_CRM_TOKEN"))
 
+    def __init__(self):
+        self.sh = self.get_spreadsheet()
+        self.delivery_msg_cfg = self.get_delivery_msg_cfg()
+
+    @staticmethod
+    def get_spreadsheet() -> Spreadsheet:
+        with open('google_creds.json', 'r') as creds_file:
+            google_creds = json.load(creds_file)
+
+        gc = gspread.service_account_from_dict(google_creds)
+        sh = gc.open_by_key(os.getenv('SPREADSHEET_CODE'))
+        return sh
+
+    def get_delivery_msg_cfg(self) -> dict:
+        config = {}
+        worksheet = self.sh.worksheet('delivery_msg_cfg')
+        ws_data = worksheet.batch_get(['B2:F50'])[0]
+        for data in ws_data[1:]:
+            days_count = data[2]
+            if '-' in days_count:
+                days_count = tuple([int(x) for x in days_count.split('-')])
+            else:
+                days_count = int(days_count)
+            config[data[0]] = {'status_msg': data[1],
+                               'days_count': days_count,
+                               'emoji': data[3],
+                               'category': data[4]}
+        return config
+
     @classmethod
     def add_ruspost_track_to_crm(cls, ext_order_id: str, track_number: str):
         order = {
@@ -283,3 +317,63 @@ class CrmMethods:
         if not changes_list:
             log.debug(f'Нет изменений. sinceId = {since_id}')
         return changes_list
+
+    async def get_orders_by_phone_number(self,
+            phone: str, actuality: str
+    ) -> Optional[list]:  # todo обработка ошибок. Сделать ретрай
+        url = f"https://{SUBDOMAIN}.retailcrm.ru/api/v5/orders?filter[customer]={phone}{self.get_status_filters(actuality)}"
+        log.debug('url = %s', url)
+        headers = {"X-API-KEY": TOKEN}
+
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.get(
+                        url, headers=headers, raise_for_status=True
+                ) as response:
+                    response = await response.json()
+                    if not response.get("success") or not response.get("orders"):
+                        return
+                    return response.get("orders")
+            except Exception as e:
+                log.error('Error while getting order_info from CRM, exc = %s', e)
+                return
+
+    def get_orders_by_phone_number(self, phone: str, actuality: str):
+        pass
+
+    def get_status_filters(self, actuality: str) -> str:
+        filters = ""
+        if actuality == "new":
+            for status_code in self.get_message_mapping_config(codes_only=True, categories=('active', 'delivery')):
+                filters += f"&filter[extendedStatus][]={status_code}"
+        elif actuality == "old":
+            for status_code in self.get_message_mapping_config(codes_only=True, categories=('done',)):
+                filters += f"&filter[extendedStatus][]={status_code}"
+        log.debug('filters= %s', filters)
+        return filters
+
+    def get_message_mapping_config(self,
+            codes_only: bool = False, categories: tuple = ()
+    ) -> dict:
+        codes = {key for key, val in self.delivery_msg_cfg.items() if val.get('category') in categories}
+        return codes if codes_only else self.delivery_msg_cfg
+
+    async def get_orders_by_order_number(self, order_number: str) -> Optional[list]:  # todo обработка ошибок. Сделать ретрай
+        # todo сделать небольшой таймаут, чтоб пользователи не ждали долго
+        url = f"https://{SUBDOMAIN}.retailcrm.ru/api/v5/orders?filter[numbers][]={order_number}"
+        log.debug('url = %s', url)
+        headers = {"X-API-KEY": TOKEN}
+
+        async with aiohttp.ClientSession() as session:
+            try:
+                async with session.get(
+                        url, headers=headers, raise_for_status=True
+                ) as response:
+                    response = await response.json()
+                    if not response.get("success") or not response.get("orders"):
+                        return
+                    return response.get("orders")
+            except Exception as e:
+                log.error('Error while getting order_info from CRM, exc = %s', e)
+                return
+
