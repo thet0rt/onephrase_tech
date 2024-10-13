@@ -6,15 +6,13 @@ from administration import admin_bp
 import os
 from db import db
 from flask_login import LoginManager
+from flask_smorest import Api
 
 from models import User
+from money import money_bp
 
 app = Flask(__name__)
-# Регистрируем БП
 
-app.register_blueprint(legacy_bp, url_prefix='/')
-app.register_blueprint(auth_bp, url_prefix='/auth')
-app.register_blueprint(admin_bp, url_prefix='/admin')
 
 
 
@@ -27,6 +25,24 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 db.init_app(app)
+
+# api
+app.config["API_TITLE"] = "Onephrase api"
+app.config["API_VERSION"] = "v1"
+app.config["OPENAPI_VERSION"] = "3.0.2"
+app.config["OPENAPI_URL_PREFIX"] = "/"
+app.config["OPENAPI_JSON_PATH"] = "api-spec.json"
+app.config["OPENAPI_SWAGGER_UI_PATH"] = os.getenv('OPENAPI_SWAGGER_UI_PATH')
+app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
+
+api = Api(app)
+
+# Регистрируем БП
+
+api.register_blueprint(legacy_bp, url_prefix='/')
+api.register_blueprint(auth_bp, url_prefix='/auth')
+api.register_blueprint(admin_bp, url_prefix='/admin')
+api.register_blueprint(money_bp, url_prefix='/money')
 
 # Инициируем логин-менеджер
 login_manager = LoginManager()

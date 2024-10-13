@@ -1,5 +1,5 @@
 from flask_smorest import Blueprint
 
-admin_bp = Blueprint('admin', __name__)
+money_bp = Blueprint('money', __name__)
 
 from . import routes

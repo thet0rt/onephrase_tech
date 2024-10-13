@@ -1,8 +1,21 @@
+import enum
 from datetime import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
+
 from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from db import db
+
+
+class BaseEnum(enum.Enum):
+
+    def __str__(self):
+        return str(self.value)
+
+
+class CategoryType(BaseEnum):
+    INCOME = 'INCOME'
+    OUTCOME = 'OUTCOME'
 
 
 class User(UserMixin, db.Model):
@@ -21,7 +34,21 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(500), nullable=False)
     superuser = db.Column(db.Boolean, default=False)
     created_on = db.Column(db.DateTime(), default=datetime.utcnow)
-    updated_on = db.Column(db.DateTime(), default=datetime.utcnow,  onupdate=datetime.utcnow)
+    updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def __repr__(self):
         return "<{}:{}>".format(self.id, self.username)
+
+
+class Transactions(db.Model):
+    id = db.Column(db.Integer(), primary_key=True)
+    category_id = db.Column(db.Integer(), nullable=False)
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
+    transaction_date = db.Column(db.DateTime(), nullable=False)
+    description = db.Column(db.String(255), nullable=True)
+
+
+class Categories(db.Model):
+    id = db.Column(db.Integer(), primary_key=True)
+    description = db.Column(db.String(255), nullable=True)
+    type = db.Column(db.Enum(CategoryType, name='category_type'), nullable=False)
