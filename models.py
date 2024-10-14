@@ -40,15 +40,25 @@ class User(UserMixin, db.Model):
         return "<{}:{}>".format(self.id, self.username)
 
 
-class Transactions(db.Model):
+class Transaction(db.Model):
+
+    __tablename__ = 'transactions'
+
     id = db.Column(db.Integer(), primary_key=True)
-    category_id = db.Column(db.Integer(), nullable=False)
+    created_by_id = db.Column(db.Integer(), db.ForeignKey('users.id'))
+    category_id = db.Column(db.Integer(), db.ForeignKey('categories.id'))
     amount = db.Column(db.Numeric(10, 2), nullable=False)
     transaction_date = db.Column(db.DateTime(), nullable=False)
     description = db.Column(db.String(255), nullable=True)
+    created_by = db.relationship('User', backref='transactions')
+    category = db.relationship('Category', backref='transactions')
 
 
-class Categories(db.Model):
+
+class Category(db.Model):
+
+    __tablename__ = 'categories'
+
     id = db.Column(db.Integer(), primary_key=True)
     description = db.Column(db.String(255), nullable=True)
     type = db.Column(db.Enum(CategoryType, name='category_type'), nullable=False)
