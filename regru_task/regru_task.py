@@ -321,6 +321,9 @@ class CrmMethods:
     async def get_orders_by_phone_number(self,
             phone: str, actuality: str
     ) -> Optional[list]:  # todo обработка ошибок. Сделать ретрай
+        filters = self.get_status_filters(actuality)
+        response = self.client.orders(filters=filters)
+
         url = f"https://{SUBDOMAIN}.retailcrm.ru/api/v5/orders?filter[customer]={phone}{self.get_status_filters(actuality)}"
         log.debug('url = %s', url)
         headers = {"X-API-KEY": TOKEN}
@@ -349,6 +352,28 @@ class CrmMethods:
         elif actuality == "old":
             for status_code in self.get_message_mapping_config(codes_only=True, categories=('done',)):
                 filters += f"&filter[extendedStatus][]={status_code}"
+        log.debug('filters= %s', filters)
+        return filters
+
+    def get_status_filters_dict(self, actuality: str) -> str:
+        '''
+        Example
+        order_filter = {
+        "customFields": {
+        "client_type_order": "yurik",
+        "real_date_of_payment": {"min": self.start_date, "max": self.end_date},
+            },
+        "minPrepaySumm": 1,
+        }
+        '''
+        status_codes = []
+        filters = {'extendedStatus': status_codes}
+        if actuality == "new":
+            for status_code in self.get_message_mapping_config(codes_only=True, categories=('active', 'delivery')):
+                status_codes.append(status_code)
+        elif actuality == "old":
+            for status_code in self.get_message_mapping_config(codes_only=True, categories=('done',)):
+                status_codes.append(status_code)
         log.debug('filters= %s', filters)
         return filters
 
