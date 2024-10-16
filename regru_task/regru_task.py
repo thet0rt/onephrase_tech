@@ -350,7 +350,18 @@ class CrmMethods:
         order_filters.update(filters)
         response = cls.client.orders(filters=order_filters)
         if response.is_successful():
-            return response.get_response()
+            return response.get_response()['orders']
+        log.error(response.get_error_msg())
+
+    @classmethod
+    def get_orders_by_phone_number_test(cls, phone: str, filters: dict) -> Optional[list]:
+        order_filters = {
+            'customer': phone
+        }
+        order_filters.update(filters)
+        response = cls.client.orders(filters=order_filters)
+        if response.is_successful():
+            return response.get_response()['orders']
         log.error(response.get_error_msg())
 
     def get_orders_by_order_number(self, order_number: str) -> Optional[list]:
@@ -394,7 +405,7 @@ class TgIntegration:
                                'category': data[4]}
         return config
 
-    def get_actual_orders_msg(self, phone_number: str):
+    def get_actual_orders_msg(self, phone_number: str) -> Optional[list]:
         filters = self.get_status_filters_dict('new')
         orders = CrmMethods.get_orders_by_phone_number(phone_number, filters)
         if orders:

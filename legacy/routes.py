@@ -2,7 +2,7 @@
 import os
 from uuid import uuid4
 
-from flask import request, url_for, flash, redirect
+from flask import request, url_for, flash, redirect, jsonify
 from flask import Response
 from flask import render_template
 from flask import send_file, send_from_directory
@@ -166,8 +166,11 @@ def health_check():
     return Response("Healthcheck. Everything is fine. Have a good day!", status=200)
 
 
-@legacy_bp.get("/get_order_by_phone_number/<phone_number>")
+@legacy_bp.get(f"/{os.getenv('SECRET_PATH')}/<phone_number>")
 def get_order_by_phone_number(phone_number):
     tg_integration = TgIntegration()
     msg = tg_integration.get_actual_orders_msg(phone_number)
-    return Response(f'{msg}', 200)
+    if msg:
+        return jsonify(msg)
+    else:
+        return Response('Orders not found', 204)
