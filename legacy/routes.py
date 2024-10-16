@@ -13,6 +13,7 @@ from log_settings import log
 from methods import handle_webhook_b2c, handle_webhook_b2b, allowed_file, humanize_exp_date, get_date_from_redis
 from tasks import sync_analytics, create_links_from_photos, sync_analytics_b2c
 from const import UPLOAD_FOLDER
+from regru_task.regru_task import TgIntegration
 from . import legacy_bp
 
 
@@ -163,3 +164,10 @@ def upload_files():
 def health_check():
     log.info("Healthcheck. Everything is fine. Have a good day!")
     return Response("Healthcheck. Everything is fine. Have a good day!", status=200)
+
+
+@legacy_bp.get("/get_order_by_phone_number/<phone_number>")
+def get_order_by_phone_number(phone_number):
+    tg_integration = TgIntegration()
+    msg = tg_integration.get_actual_orders_msg(phone_number)
+    return Response(f'{msg}', 200)

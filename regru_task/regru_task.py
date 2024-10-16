@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 import json
 import os
+from datetime import datetime as dt
+from datetime import timedelta
 from typing import Optional
 
 import gspread
 import requests
 import retailcrm
+from cachetools import TTLCache, cached
 from gspread import Spreadsheet
 
-from mail import send_email
 from log_settings import log
-from cachetools import TTLCache, cached
+from mail import send_email
 from regru_task.exceptions import *
 
 
@@ -145,6 +147,37 @@ class CdekMethods:
             log.error(f'CDEK - не удалось обновить заказ(( {order_id} - {exc}')
             send_email('ERROR', f'CDEK - не удалось обновить заказ(( {order_id} - {exc}')
 
+    @classmethod
+    def get_cdek_order_info(cls, cdek_uuid) -> Optional[dict]:
+        url = f"https://api.cdek.ru/v2/orders/{cdek_uuid}"
+        headers = {
+            "accept": "application/json",
+            "Authorization": f"Bearer {cls.get_cdek_token()}",
+            "content-type": "application/json",
+        }
+
+        try:
+            response = requests.get(url=url, headers=headers)
+            response.raise_for_status()
+            log.debug(response.json())
+            return response.json()
+        except Exception as exc:
+            log.error(f'CDEK - Error while getting order info for cdek_uuid={cdek_uuid} - {exc}')
+            send_email('CDEK ERROR', f'CDEK - Error while getting order info for cdek_uuid={cdek_uuid} - {exc}')
+
+    @classmethod
+    def get_cdek_status(cls, cdek_uuid) -> dict:
+        cdek_status = {"status": None, "planned_date": None}
+        order_info = cls.get_cdek_order_info(cdek_uuid)
+        log.debug(order_info)
+        status_list = order_info.get("entity", {}).get("statuses")
+        if status_list:
+            cdek_status.update(status=status_list[0].get("name"))
+        cdek_status.update(
+            planned_date=order_info.get("entity", {}).get("planned_delivery_date")
+        )
+        return cdek_status
+
 
 class RusPostMethods:
     ruspost_token = os.getenv('ruspost_token')
@@ -202,38 +235,29 @@ class RusPostMethods:
         except Exception as exc:
             log.error(f'Error while integrating RusPost exc={exc}')
 
+    @classmethod
+    def get_ruspost_order_info(cls, ext_order_id) -> dict:
+        url = f'https://www.pochta.ru/api/tracking/api/v1/trackings/by-barcodes?language=ru' \
+              f'&track-numbers={ext_order_id}'
+
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json;charset=UTF-8",
+            "Authorization": "AccessToken " + cls.ruspost_token,
+            "X-User-Authorization": "Basic " + cls.ruspost_key
+        }
+        try:
+            response = requests.get(url=url, headers=headers)
+            response.raise_for_status()
+            log.debug('Ruspost response = %s', response.json())
+
+            return response.json()
+        except Exception as exc:
+            log.error('Error while making ruspost request exc=%s', exc)
+
 
 class CrmMethods:
     client = retailcrm.v5(os.getenv("RETAIL_CRM_URI"), os.getenv("RETAIL_CRM_TOKEN"))
-
-    def __init__(self):
-        self.sh = self.get_spreadsheet()
-        self.delivery_msg_cfg = self.get_delivery_msg_cfg()
-
-    @staticmethod
-    def get_spreadsheet() -> Spreadsheet:
-        with open('google_creds.json', 'r') as creds_file:
-            google_creds = json.load(creds_file)
-
-        gc = gspread.service_account_from_dict(google_creds)
-        sh = gc.open_by_key(os.getenv('SPREADSHEET_CODE'))
-        return sh
-
-    def get_delivery_msg_cfg(self) -> dict:
-        config = {}
-        worksheet = self.sh.worksheet('delivery_msg_cfg')
-        ws_data = worksheet.batch_get(['B2:F50'])[0]
-        for data in ws_data[1:]:
-            days_count = data[2]
-            if '-' in days_count:
-                days_count = tuple([int(x) for x in days_count.split('-')])
-            else:
-                days_count = int(days_count)
-            config[data[0]] = {'status_msg': data[1],
-                               'days_count': days_count,
-                               'emoji': data[3],
-                               'category': data[4]}
-        return config
 
     @classmethod
     def add_ruspost_track_to_crm(cls, ext_order_id: str, track_number: str):
@@ -318,44 +342,66 @@ class CrmMethods:
             log.debug(f'Нет изменений. sinceId = {since_id}')
         return changes_list
 
-    async def get_orders_by_phone_number(self,
-            phone: str, actuality: str
-    ) -> Optional[list]:  # todo обработка ошибок. Сделать ретрай
-        filters = self.get_status_filters(actuality)
+    @classmethod
+    def get_orders_by_phone_number(cls, phone: str, filters: dict) -> Optional[list]:
+        order_filters = {
+            'customer': phone
+        }
+        order_filters.update(filters)
+        response = cls.client.orders(filters=order_filters)
+        if response.is_successful():
+            return response.get_response()
+        log.error(response.get_error_msg())
+
+    def get_orders_by_order_number(self, order_number: str) -> Optional[list]:
+        filters = {
+            'numbers': [order_number]
+        }
         response = self.client.orders(filters=filters)
+        if response.is_successful():
+            return response.get_response()
+        log.error(response.get_error_msg())
 
-        url = f"https://{SUBDOMAIN}.retailcrm.ru/api/v5/orders?filter[customer]={phone}{self.get_status_filters(actuality)}"
-        log.debug('url = %s', url)
-        headers = {"X-API-KEY": TOKEN}
 
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.get(
-                        url, headers=headers, raise_for_status=True
-                ) as response:
-                    response = await response.json()
-                    if not response.get("success") or not response.get("orders"):
-                        return
-                    return response.get("orders")
-            except Exception as e:
-                log.error('Error while getting order_info from CRM, exc = %s', e)
-                return
+class TgIntegration:
 
-    def get_orders_by_phone_number(self, phone: str, actuality: str):
-        pass
+    def __init__(self):
+        self.sh = self.get_spreadsheet()
+        self.delivery_msg_cfg = self.get_delivery_msg_cfg()
 
-    def get_status_filters(self, actuality: str) -> str:
-        filters = ""
-        if actuality == "new":
-            for status_code in self.get_message_mapping_config(codes_only=True, categories=('active', 'delivery')):
-                filters += f"&filter[extendedStatus][]={status_code}"
-        elif actuality == "old":
-            for status_code in self.get_message_mapping_config(codes_only=True, categories=('done',)):
-                filters += f"&filter[extendedStatus][]={status_code}"
-        log.debug('filters= %s', filters)
-        return filters
+    @staticmethod
+    def get_spreadsheet() -> Spreadsheet:
+        with open('google_creds.json', 'r') as creds_file:
+            google_creds = json.load(creds_file)
 
-    def get_status_filters_dict(self, actuality: str) -> str:
+        gc = gspread.service_account_from_dict(google_creds)
+        sh = gc.open_by_key(os.getenv('SPREADSHEET_CODE_TG'))
+        return sh
+
+    def get_delivery_msg_cfg(self) -> dict:
+        config = {}
+        worksheet = self.sh.worksheet('delivery_msg_cfg')
+        ws_data = worksheet.batch_get(['B2:F50'])[0]
+        for data in ws_data[1:]:
+            days_count = data[2]
+            if '-' in days_count:
+                days_count = tuple([int(x) for x in days_count.split('-')])
+            else:
+                days_count = int(days_count)
+            config[data[0]] = {'status_msg': data[1],
+                               'days_count': days_count,
+                               'emoji': data[3],
+                               'category': data[4]}
+        return config
+
+    def get_actual_orders_msg(self, phone_number: str):
+        filters = self.get_status_filters_dict('new')
+        orders = CrmMethods.get_orders_by_phone_number(phone_number, filters)
+        if orders:
+            orders_info = self.process_order_data(orders)
+            return orders_info
+
+    def get_status_filters_dict(self, actuality: str) -> dict:
         '''
         Example
         order_filter = {
@@ -378,27 +424,188 @@ class CrmMethods:
         return filters
 
     def get_message_mapping_config(self,
-            codes_only: bool = False, categories: tuple = ()
-    ) -> dict:
+                                   codes_only: bool = False, categories: tuple = ()
+                                   ) -> dict:
         codes = {key for key, val in self.delivery_msg_cfg.items() if val.get('category') in categories}
         return codes if codes_only else self.delivery_msg_cfg
 
-    async def get_orders_by_order_number(self, order_number: str) -> Optional[list]:  # todo обработка ошибок. Сделать ретрай
-        # todo сделать небольшой таймаут, чтоб пользователи не ждали долго
-        url = f"https://{SUBDOMAIN}.retailcrm.ru/api/v5/orders?filter[numbers][]={order_number}"
-        log.debug('url = %s', url)
-        headers = {"X-API-KEY": TOKEN}
+    def process_order_data(self, order_data: list) -> list[str]:
+        info_list = []
+        config = self.get_message_mapping_config()
+        for order in order_data:
+            number = order.get("number")
+            status = order.get("status")
+            items = order.get("items")
+            if not items:
+                continue
+            emoji = config.get(status, {}).get("emoji", "")
+            order_number_msg = f"{emoji} Заказ №{number}"
+            item_msg = self.get_item_list(items)
+            if not item_msg:
+                continue
+            status_msg = config.get(status, {}).get("status_msg")
+            if not status_msg:
+                log.warning("No status msg for order %s, %s", number, order)
+                status_msg = ''
+            delivery_status_msg = self.get_delivery_status_msg(order, status, config)
+            if not order_number_msg:
+                log.error("No order_number_msg for order %s, %s", number, order)
+                continue
+            message = (
+                f"{order_number_msg}\n{status_msg}\n{item_msg}"
+            )
+            if delivery_status_msg:
+                message += f'\n\n{delivery_status_msg}'
+            info_list.append(message)
+        return info_list
 
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.get(
-                        url, headers=headers, raise_for_status=True
-                ) as response:
-                    response = await response.json()
-                    if not response.get("success") or not response.get("orders"):
-                        return
-                    return response.get("orders")
-            except Exception as e:
-                log.error('Error while getting order_info from CRM, exc = %s', e)
-                return
+    @staticmethod
+    def get_item_list(items: list) -> str:
+        items_description = "\nСостав заказа:"
+        for count, item in enumerate(items, 1):
+            name = item.get("offer", {}).get("displayName")
+            quantity = item.get("quantity")
+            if not name or not quantity:
+                log.error(f'Error with item description item = {item}')
+                return ''
+            items_description += f"\n{count}. {name} - {quantity} шт."
+        return items_description
 
+    def get_delivery_status_msg(self, order: dict, status, config) -> str:
+        if status in [
+            'website-order',
+            'not-ready'
+        ]:
+            return self.get_dispatch_msg_alternative(order, config, status)
+        elif status in [
+            'delay-new',
+            "emb",
+        ]:
+            return self.get_dispatch_msg_special(order, config, status)
+
+        elif status in [
+            "assembling",
+            "fail-gotov",
+            "assembling-complete",
+            "v-rabote",
+            "pack-no-track-number",
+            "pack",
+            "ready",
+        ]:
+            return self.get_dispatch_msg(config, status)
+        elif status in [
+            "send-to-delivery",
+            "delivering",
+            "redirect",
+            "ready-for-self-pickup",
+            "arrived-in-pickup-point",
+            "vozvrat-otpravleniia",
+        ]:
+            delivery_type = order.get("delivery", {}).get("code")
+            if delivery_type == "sdek-v-2":
+                delivery_msg = self.get_cdek_msg(order)
+                return delivery_msg
+            elif delivery_type == 'pochta-rossii-treking-tarifikator':
+                delivery_msg = self.get_ruspost_msg(order)
+                return delivery_msg
+            elif delivery_type == 'self-delivery':
+                return ''
+            else:
+                log.warning("Delivery type not in [sdek-v-2, pochta-rossii-treking-tarifikator,"
+                            " self-delivery, self-delivery] order=%s",
+                            order.get('number'))
+
+    @staticmethod
+    def get_cdek_msg(order: dict) -> Optional[str]:
+        cdek_uuid = order.get("delivery", {}).get("data", {}).get("externalId")
+        track_number = order.get("delivery", {}).get("data", {}).get("trackNumber")
+        cdek_status = CdekMethods.get_cdek_status(cdek_uuid)
+        delivery_status = cdek_status.get("status")
+        planned_date = cdek_status.get("planned_date")
+        if not delivery_status or not planned_date:
+            log.error('Something is wrong with cdek_status = %s', cdek_status)
+            return ""
+        delivery_msg = (f"\nТип доставки: СДЭК"
+                        f"\nТрек-номер для отслеживания: {track_number}"
+                        f"\nСтатус доставки: {delivery_status}"
+                        f"\nОриентировочная дата прибытия: {planned_date}")
+        return delivery_msg
+
+    def get_ruspost_msg(self, order: dict) -> Optional[str]:
+        ruspost_tracking_number = order.get("delivery", {}).get("data", {}).get("trackNumber")
+        ruspost_status = self.get_ruspost_status(ruspost_tracking_number)
+        delivery_status = ruspost_status.get("status")
+        planned_date = ruspost_status.get("planned_date")
+        if not delivery_status:
+            log.error('Something is wrong with ruspost = %s', ruspost_status)
+            return ""
+        delivery_msg = (f"\nТип доставки: Почта России"
+                        f"\nТрек-номер для отслеживания: {ruspost_tracking_number}"
+                        f"\nСтатус доставки: {delivery_status}")
+        if planned_date:
+            delivery_msg += f"\nОриентировочная дата прибытия: {planned_date}"
+
+        return delivery_msg
+
+    @staticmethod
+    def get_ruspost_status(ruspost_tracking_number) -> dict:
+        ruspost_status = {"status": None, "planned_date": None}
+        log.debug('ruspost_tracking_number = %s', ruspost_tracking_number)
+        order_info = RusPostMethods.get_ruspost_order_info(ruspost_tracking_number)
+        try:
+            status_info = order_info.get('detailedTrackings', {})[0].get('trackingItem')
+            status = status_info.get('commonStatus')
+            expected_delivery_date = status_info.get('shipmentTripInfo', {}).get('expectedDeliveryDate')
+            if expected_delivery_date:
+                expected_delivery_date = expected_delivery_date[:10]
+                log.debug('Expected_delivery_date = %s', expected_delivery_date)
+                ruspost_status.update(
+                    status=status,
+                    planned_date=expected_delivery_date
+                )
+            log.debug('ruspost_status=%s', ruspost_status)
+        except (TypeError, IndexError, AttributeError) as e:
+            log.error('Error while getting ruspost stastus, exc = %s', e)
+        return ruspost_status
+
+    @staticmethod
+    def get_dispatch_msg(config: dict, status: str) -> str:
+        days_count = config.get(status).get("days_count")
+        if days_count == 0:
+            return ''
+        sending_date_1 = dt.now() + timedelta(days=config.get(status).get("days_count")[0])
+        sending_date_2 = dt.now() + timedelta(days=config.get(status).get("days_count")[1])
+        sending_date_1 = sending_date_1.strftime("%d.%m.%Y")
+        sending_date_2 = sending_date_2.strftime("%d.%m.%Y")
+        return f"Ориентировочная дата отправки {sending_date_1} - {sending_date_2}"
+
+    @staticmethod
+    def get_dispatch_msg_alternative(order: dict, config: dict, status: str) -> str:
+        real_date_of_payment = order.get('customFields', {}).get('real_date_of_payment')
+        if not real_date_of_payment:
+            log.error("Something is wrong with real_date_of_payment order= %s", order.get('number'))
+            return ''
+        real_date_of_payment = dt.strptime(real_date_of_payment, '%Y-%m-%d')
+
+        sending_date_1 = real_date_of_payment + timedelta(days=config.get(status).get("days_count")[0])
+        sending_date_2 = real_date_of_payment + timedelta(days=config.get(status).get("days_count")[1])
+        sending_date_1 = sending_date_1.strftime("%d.%m.%Y")
+        sending_date_2 = sending_date_2.strftime("%d.%m.%Y")
+        return f"Ориентировочная дата отправки {sending_date_1} - {sending_date_2}"
+
+    @staticmethod
+    def get_dispatch_msg_special(order: dict, config: dict, status: str) -> str:
+        real_date_of_payment = order.get('customFields', {}).get('real_date_of_payment')
+        if not real_date_of_payment:
+            log.error("Something is wrong with real_date_of_payment order= %s", order.get('number'))
+            return ''
+        real_date_of_payment = dt.strptime(real_date_of_payment, '%Y-%m-%d')
+        today = dt.now()
+        days_since = (today - real_date_of_payment).days
+        if days_since <= 5:
+            sending_date_1 = real_date_of_payment + timedelta(days=config.get(status).get("days_count")[0])
+            sending_date_2 = real_date_of_payment + timedelta(days=config.get(status).get("days_count")[1])
+            sending_date_1 = sending_date_1.strftime("%d.%m.%Y")
+            sending_date_2 = sending_date_2.strftime("%d.%m.%Y")
+            return f"Ориентировочная дата отправки {sending_date_1} - {sending_date_2}"
+        return "Ориентировочная дата отправки: на уточнении, позвали менеджера для проверки срока отправки"
