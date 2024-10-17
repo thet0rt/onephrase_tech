@@ -170,7 +170,9 @@ def health_check():
 def get_order_by_phone_number(phone_number):
     tg_integration = TgIntegration()
     msg = tg_integration.get_actual_orders_msg(phone_number)
-    if msg:
-        return jsonify(msg)
-    else:
+    if not msg:
         return Response('Orders not found', 204)
+    response = {}
+    for i, order in enumerate(msg, 1):
+        response.update({f'order_{i}': order})
+    return jsonify(response)
