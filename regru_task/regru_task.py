@@ -354,23 +354,13 @@ class CrmMethods:
         log.error(response.get_error_msg())
 
     @classmethod
-    def get_orders_by_phone_number_test(cls, phone: str, filters: dict) -> Optional[list]:
-        order_filters = {
-            'customer': phone
-        }
-        order_filters.update(filters)
-        response = cls.client.orders(filters=order_filters)
-        if response.is_successful():
-            return response.get_response()['orders']
-        log.error(response.get_error_msg())
-
-    def get_orders_by_order_number(self, order_number: str) -> Optional[list]:
+    def get_orders_by_order_number(cls, order_number: str) -> Optional[list]:
         filters = {
             'numbers': [order_number]
         }
-        response = self.client.orders(filters=filters)
+        response = cls.client.orders(filters=filters)
         if response.is_successful():
-            return response.get_response()
+            return response.get_response()['orders']
         log.error(response.get_error_msg())
 
 
@@ -411,6 +401,19 @@ class TgIntegration:
         if orders:
             orders_info = self.process_order_data(orders)
             return orders_info
+
+    def get_order_by_order_number_msg(self, order_number: str):
+        order_number = self.normalize_order_number(order_number)
+        orders = CrmMethods.get_orders_by_order_number(order_number)
+        if orders:
+            if orders_info := self.process_order_data(orders):
+                return orders_info
+
+    @staticmethod
+    def normalize_order_number(order_number: str) -> str:
+        order_number = order_number.replace('А', 'A')
+        order_number = order_number.replace('С', 'C')
+        return order_number
 
     def get_status_filters_dict(self, actuality: str) -> dict:
         '''

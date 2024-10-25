@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import re
 from uuid import uuid4
 
 from flask import request, url_for, flash, redirect, jsonify
@@ -170,6 +171,21 @@ def health_check():
 def get_order_by_phone_number(phone_number):
     tg_integration = TgIntegration()
     msg = tg_integration.get_actual_orders_msg(phone_number)
+    if not msg:
+        return Response('Orders not found', 204)
+    response = {}
+    for i, order in enumerate(msg, 1):
+        response.update({f'order_{i}': order})
+    return jsonify(response)
+
+
+@legacy_bp.get(f"/{os.getenv('SECRET_PATH_2')}/<order_number>")
+def get_order_by_phone_number(order_number):
+    if not re.fullmatch(r'[0-9]{1,5}[ACАС]', order_number):
+        response = {'order_1': 'invalid format'}
+        return jsonify(response), 400
+    tg_integration = TgIntegration()
+    msg = tg_integration.get_order_by_order_number_msg(order_number)
     if not msg:
         return Response('Orders not found', 204)
     response = {}
