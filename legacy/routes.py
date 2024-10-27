@@ -172,7 +172,7 @@ def health_check():
 def get_order_by_phone_number(phone_number):
     session_id = request.form.get('session_id')
     current_numbers = r.smembers(session_id)
-    current_numbers = list(current_numbers) if current_numbers else None
+    current_numbers = list(current_numbers) if current_numbers else []
     log.info('session_id = %s', session_id)
     phone_pattern = r'^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$'
     if not re.fullmatch(phone_pattern, phone_number):
