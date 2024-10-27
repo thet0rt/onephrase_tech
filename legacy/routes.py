@@ -16,6 +16,7 @@ from tasks import sync_analytics, create_links_from_photos, sync_analytics_b2c
 from const import UPLOAD_FOLDER
 from regru_task.regru_task import TgIntegration
 from . import legacy_bp
+from db import r
 
 
 @legacy_bp.route("/download/photo/<filename>", methods=["GET"])
@@ -167,14 +168,22 @@ def health_check():
     return Response("Healthcheck. Everything is fine. Have a good day!", status=200)
 
 
-@legacy_bp.get(f"/{os.getenv('SECRET_PATH')}/<phone_number>")
+@legacy_bp.post(f"/{os.getenv('SECRET_PATH')}/<phone_number>")
 def get_order_by_phone_number(phone_number):
+    session_id = request.form.get('session_id')
+    current_numbers = r.smembers(session_id)
+    current_numbers = list(current_numbers) if current_numbers else None
+    log.info('session_id = %s', session_id)
     phone_pattern = r'^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$'
     if not re.fullmatch(phone_pattern, phone_number):
         response = {'order_1': 'invalid format'}
         log.info('Wrong phone_number format = %s', phone_number)
         print(f'wrong_phone_number format = {phone_number}')
         return jsonify(response), 400
+    if current_numbers and len(current_numbers) >= 3 and phone_number not in current_numbers:
+        return Response('Too many requests', 429)
+    current_numbers.append(phone_number)
+    r.sadd(*current_numbers, 86400)
     tg_integration = TgIntegration()
     msg = tg_integration.get_actual_orders_msg(phone_number)
     if not msg:
