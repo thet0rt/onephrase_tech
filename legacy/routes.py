@@ -169,6 +169,12 @@ def health_check():
 
 @legacy_bp.get(f"/{os.getenv('SECRET_PATH')}/<phone_number>")
 def get_order_by_phone_number(phone_number):
+    phone_pattern = r'^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$'
+    if not re.fullmatch(phone_pattern, phone_number):
+        response = {'order_1': 'invalid format'}
+        log.info('Wrong phone_number format = %s', phone_number)
+        print(f'wrong_phone_number format = {phone_number}')
+        return jsonify(response), 400
     tg_integration = TgIntegration()
     msg = tg_integration.get_actual_orders_msg(phone_number)
     if not msg:
