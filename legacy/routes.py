@@ -183,7 +183,7 @@ def get_order_by_phone_number(phone_number):
     if current_numbers and len(current_numbers) >= 3 and phone_number not in current_numbers:
         return Response('Too many requests', 429)
     current_numbers.append(phone_number)
-    r.sadd(*current_numbers, 86400)
+    r.sadd(session_id, *current_numbers, 86400)
     tg_integration = TgIntegration()
     msg = tg_integration.get_actual_orders_msg(phone_number)
     if not msg:
