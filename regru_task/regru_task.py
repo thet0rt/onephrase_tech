@@ -382,17 +382,29 @@ class TgIntegration:
     def get_delivery_msg_cfg(self) -> dict:
         config = {}
         worksheet = self.sh.worksheet('delivery_msg_cfg')
-        ws_data = worksheet.batch_get(['B2:F50'])[0]
+        ws_data = worksheet.batch_get(['B2:I50'])[0]
         for data in ws_data[1:]:
-            days_count = data[2]
+            status = data[0]
+            condition = data[1]
+            condition_days = data[2]
+            days_count = data[3]
+            category = data[4]
             if '-' in days_count:
                 days_count = tuple([int(x) for x in days_count.split('-')])
             else:
                 days_count = int(days_count)
-            config[data[0]] = {'status_msg': data[1],
-                               'days_count': days_count,
-                               'emoji': data[3],
-                               'category': data[4]}
+            status_cfg = {'status_msg': data[6],
+                          'days_count': days_count,
+                          'emoji': data[5],
+                          'category': category,
+                          'count_logic': data[7]}
+            if condition:
+                config[status] = dict(condition=status_cfg,
+                                      condition_days=condition_days,
+                                      category=category)
+                status_cfg.update({condition: condition_days})
+            else:
+                config[status] = status_cfg
         return config
 
     def get_actual_orders_msg(self, phone_number: str) -> Optional[list]:
@@ -452,16 +464,20 @@ class TgIntegration:
             items = order.get("items")
             if not items:
                 continue
-            emoji = config.get(status, {}).get("emoji", "")
+            current_config = config.get(status, {})
+            if current_config.get('condition'):
+                condition = self.check_condition(order, current_config)
+                current_config = current_config.get(condition, {})
+            emoji = current_config.get("emoji", "")
             order_number_msg = f"{emoji} Заказ №{number}"
             item_msg = self.get_item_list(items)
             if not item_msg:
                 continue
-            status_msg = config.get(status, {}).get("status_msg")
+            status_msg = current_config.get("status_msg")
             if not status_msg:
                 log.warning("No status msg for order %s, %s", number, order)
                 status_msg = ''
-            delivery_status_msg = self.get_delivery_status_msg(order, status, config)
+            delivery_status_msg = self.get_delivery_status_msg(order, current_config)
             if not order_number_msg:
                 log.error("No order_number_msg for order %s, %s", number, order)
                 continue
@@ -485,49 +501,32 @@ class TgIntegration:
             items_description += f"\n{count}. {name} - {quantity} шт."
         return items_description
 
-    def get_delivery_status_msg(self, order: dict, status, config) -> str:
-        if status in [
-            'website-order',
-            'not-ready'
-        ]:
-            return self.get_dispatch_msg_alternative(order, config, status)
-        elif status in [
-            'delay-new',
-            "emb",
-        ]:
-            return self.get_dispatch_msg_special(order, config, status)
+    def get_delivery_status_msg(self, order: dict, current_config) -> str:
+        category = current_config['category']
+        count_logic = current_config['count_logic']
+        days_count = current_config.get('days_count')
+        if not count_logic:
+            return ''
+        if category == 'active':
+            return self.get_dispatch_msg_new(order, count_logic, days_count)
+        elif category == 'delivery':
+            self.get_delivery_message(order)
 
-        elif status in [
-            "assembling",
-            "fail-gotov",
-            "assembling-complete",
-            "v-rabote",
-            "pack-no-track-number",
-            "pack",
-            "ready",
-        ]:
-            return self.get_dispatch_msg(config, status)
-        elif status in [
-            "send-to-delivery",
-            "delivering",
-            "redirect",
-            "ready-for-self-pickup",
-            "arrived-in-pickup-point",
-            "vozvrat-otpravleniia",
-        ]:
-            delivery_type = order.get("delivery", {}).get("code")
-            if delivery_type == "sdek-v-2":
-                delivery_msg = self.get_cdek_msg(order)
-                return delivery_msg
-            elif delivery_type == 'pochta-rossii-treking-tarifikator':
-                delivery_msg = self.get_ruspost_msg(order)
-                return delivery_msg
-            elif delivery_type == 'self-delivery':
-                return ''
-            else:
-                log.warning("Delivery type not in [sdek-v-2, pochta-rossii-treking-tarifikator,"
-                            " self-delivery, self-delivery] order=%s",
-                            order.get('number'))
+    def get_delivery_message(self, order):
+        delivery_type = order.get("delivery", {}).get("code")
+        if delivery_type == "sdek-v-2":
+            delivery_msg = self.get_cdek_msg(order)
+            return delivery_msg
+        elif delivery_type == 'pochta-rossii-treking-tarifikator':
+            delivery_msg = self.get_ruspost_msg(order)
+            return delivery_msg
+        elif delivery_type == 'self-delivery':
+            return ''
+        else:
+            log.warning("Delivery type not in [sdek-v-2, pochta-rossii-treking-tarifikator,"
+                        " self-delivery, self-delivery] order=%s",
+                        order.get('number'))
+            return ''
 
     @staticmethod
     def get_cdek_msg(order: dict) -> Optional[str]:
@@ -583,43 +582,41 @@ class TgIntegration:
         return ruspost_status
 
     @staticmethod
-    def get_dispatch_msg(config: dict, status: str) -> str:
-        days_count = config.get(status).get("days_count")
-        if days_count == 0:
+    def get_dispatch_msg_new(order: dict, count_logic: str, days_count: tuple) -> str:
+        '''
+        real_date_of_payment + days_count
+        '''
+        if count_logic == 'real_date_of_payment':
+            real_date_of_payment = order.get('customFields', {}).get('real_date_of_payment')
+            if not real_date_of_payment:
+                log.error("Something is wrong with real_date_of_payment order= %s", order.get('number'))
+                return ''
+            start_date = dt.strptime(real_date_of_payment, '%Y-%m-%d')
+        elif count_logic == 'current_date':
+            start_date = dt.now()
+        else:
+            log.error('Count logic not found in config')
             return ''
-        sending_date_1 = dt.now() + timedelta(days=config.get(status).get("days_count")[0])
-        sending_date_2 = dt.now() + timedelta(days=config.get(status).get("days_count")[1])
+
+        sending_date_1 = start_date + timedelta(days=days_count[0])
+        sending_date_2 = start_date + timedelta(days=days_count[1])
         sending_date_1 = sending_date_1.strftime("%d.%m.%Y")
         sending_date_2 = sending_date_2.strftime("%d.%m.%Y")
         return f"Ориентировочная дата отправки {sending_date_1} - {sending_date_2}"
 
     @staticmethod
-    def get_dispatch_msg_alternative(order: dict, config: dict, status: str) -> str:
+    def check_condition(order: dict, current_config: dict):
+        condition_days = current_config.get('condition_days')
         real_date_of_payment = order.get('customFields', {}).get('real_date_of_payment')
         if not real_date_of_payment:
             log.error("Something is wrong with real_date_of_payment order= %s", order.get('number'))
             return ''
-        real_date_of_payment = dt.strptime(real_date_of_payment, '%Y-%m-%d')
-
-        sending_date_1 = real_date_of_payment + timedelta(days=config.get(status).get("days_count")[0])
-        sending_date_2 = real_date_of_payment + timedelta(days=config.get(status).get("days_count")[1])
-        sending_date_1 = sending_date_1.strftime("%d.%m.%Y")
-        sending_date_2 = sending_date_2.strftime("%d.%m.%Y")
-        return f"Ориентировочная дата отправки {sending_date_1} - {sending_date_2}"
-
-    @staticmethod
-    def get_dispatch_msg_special(order: dict, config: dict, status: str) -> str:
-        real_date_of_payment = order.get('customFields', {}).get('real_date_of_payment')
-        if not real_date_of_payment:
-            log.error("Something is wrong with real_date_of_payment order= %s", order.get('number'))
+        if not isinstance(condition_days, int):
+            log.error("Something is wrong with condition_days (config) order= %s")
             return ''
         real_date_of_payment = dt.strptime(real_date_of_payment, '%Y-%m-%d')
         today = dt.now()
         days_since = (today - real_date_of_payment).days
-        if days_since <= 5:
-            sending_date_1 = real_date_of_payment + timedelta(days=config.get(status).get("days_count")[0])
-            sending_date_2 = real_date_of_payment + timedelta(days=config.get(status).get("days_count")[1])
-            sending_date_1 = sending_date_1.strftime("%d.%m.%Y")
-            sending_date_2 = sending_date_2.strftime("%d.%m.%Y")
-            return f"Ориентировочная дата отправки {sending_date_1} - {sending_date_2}"
-        return "Ориентировочная дата отправки: на уточнении, позвали менеджера для проверки срока отправки"
+        if days_since <= condition_days:
+            return 'days_less_n'
+        return 'days_more_n'
