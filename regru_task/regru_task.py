@@ -382,7 +382,7 @@ class TgIntegration:
     def get_delivery_msg_cfg(self) -> dict:
         config = {}
         worksheet = self.sh.worksheet('delivery_msg_cfg')
-        ws_data = worksheet.batch_get(['B2:I50'])[0]
+        ws_data = worksheet.batch_get(['B2:J50'])[0]
         for data in ws_data[1:]:
             status = data[0]
             condition = data[1]
