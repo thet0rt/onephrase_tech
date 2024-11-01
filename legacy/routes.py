@@ -168,7 +168,7 @@ def health_check():
     return Response("Healthcheck. Everything is fine. Have a good day!", status=200)
 
 
-@legacy_bp.get(f"/{os.getenv('SECRET_PATH')}/<phone_number>")
+@legacy_bp.post(f"/{os.getenv('SECRET_PATH')}/<phone_number>")
 def get_order_by_phone_number(phone_number):
     session_id = request.form.get('session_id')
     current_numbers = r.smembers(session_id)
