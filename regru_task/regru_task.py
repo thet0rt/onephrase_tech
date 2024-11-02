@@ -383,10 +383,12 @@ class TgIntegration:
         config = {}
         worksheet = self.sh.worksheet('delivery_msg_cfg')
         ws_data = worksheet.batch_get(['B2:J50'])[0]
-        for data in ws_data[1:]:
+        for data in ws_data:
             status = data[0]
             condition = data[1]
             condition_days = data[2]
+            if str(condition_days).isdigit():
+                condition_days = int(condition_days)
             days_count = data[3]
             category = data[4]
             if '-' in days_count:
@@ -398,10 +400,13 @@ class TgIntegration:
                           'emoji': data[5],
                           'category': category,
                           'count_logic': data[7]}
+            if not config.get(status):
+                config[status] = {}
             if condition:
-                config[status] = dict(condition=status_cfg,
-                                      condition_days=condition_days,
-                                      category=category)
+                config[status].update(dict(**{condition: status_cfg},
+                                           condition_days=condition_days,
+                                           category=category,
+                                           condition=True))
                 status_cfg.update({condition: condition_days})
             else:
                 config[status] = status_cfg
@@ -612,7 +617,7 @@ class TgIntegration:
             log.error("Something is wrong with real_date_of_payment order= %s", order.get('number'))
             return ''
         if not isinstance(condition_days, int):
-            log.error("Something is wrong with condition_days (config) order= %s")
+            log.error("Something is wrong with condition_days (config) order= %s", order.get('number'))
             return ''
         real_date_of_payment = dt.strptime(real_date_of_payment, '%Y-%m-%d')
         today = dt.now()
