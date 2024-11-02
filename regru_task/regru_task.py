@@ -178,6 +178,19 @@ class CdekMethods:
         )
         return cdek_status
 
+    @classmethod
+    def get_cdek_pickpoint(cls, cdek_uuid) -> dict:
+        cdek_pickpoint_info = {"pickpoint_address": None, "keep_until": None}
+        order_info = cls.get_cdek_order_info(cdek_uuid).get("entity", {})
+        address = order_info.get('to_location', {}).get('address')
+        keep_until = order_info.get('keep_free_until')
+        log.debug(order_info)
+        cdek_pickpoint_info.update(
+            pickpoint_address=address,
+            keep_until=keep_until
+        )
+        return cdek_pickpoint_info
+
 
 class RusPostMethods:
     ruspost_token = os.getenv('ruspost_token')
@@ -469,7 +482,7 @@ class TgIntegration:
             items = order.get("items")
             if not items:
                 continue
-            current_config = config.get(status, {})
+            current_config = config.get(status, config.get('-'))
             if current_config.get('condition'):
                 condition = self.check_condition(order, current_config)
                 current_config = current_config.get(condition, {})
@@ -482,7 +495,7 @@ class TgIntegration:
             if not status_msg:
                 log.warning("No status msg for order %s, %s", number, order)
                 status_msg = ''
-            delivery_status_msg = self.get_delivery_status_msg(order, current_config)
+            delivery_status_msg = self.get_delivery_status_msg(order, current_config, status)
             if not order_number_msg:
                 log.error("No order_number_msg for order %s, %s", number, order)
                 continue
@@ -506,21 +519,21 @@ class TgIntegration:
             items_description += f"\n{count}. {name} - {quantity} шт."
         return items_description
 
-    def get_delivery_status_msg(self, order: dict, current_config) -> str:
+    def get_delivery_status_msg(self, order: dict, current_config, status) -> str:
         category = current_config['category']
         count_logic = current_config['count_logic']
         days_count = current_config.get('days_count')
+        if category == 'delivery':
+            return self.get_delivery_message(order, status)
         if not count_logic:
             return ''
         if category == 'active':
             return self.get_dispatch_msg_new(order, count_logic, days_count)
-        elif category == 'delivery':
-            self.get_delivery_message(order)
 
-    def get_delivery_message(self, order):
+    def get_delivery_message(self, order, status):
         delivery_type = order.get("delivery", {}).get("code")
         if delivery_type == "sdek-v-2":
-            delivery_msg = self.get_cdek_msg(order)
+            delivery_msg = self.get_cdek_msg(order, status)
             return delivery_msg
         elif delivery_type == 'pochta-rossii-treking-tarifikator':
             delivery_msg = self.get_ruspost_msg(order)
@@ -534,9 +547,21 @@ class TgIntegration:
             return ''
 
     @staticmethod
-    def get_cdek_msg(order: dict) -> Optional[str]:
+    def get_cdek_msg(order: dict, status) -> Optional[str]:
         cdek_uuid = order.get("delivery", {}).get("data", {}).get("externalId")
         track_number = order.get("delivery", {}).get("data", {}).get("trackNumber")
+        if status == 'arrived-in-pickup-point':
+            cdek_pickpoint_info = CdekMethods.get_cdek_pickpoint(cdek_uuid)
+            pickpoint_address = cdek_pickpoint_info.get("pickpoint_address")
+            keep_until = cdek_pickpoint_info.get("keep_until")
+            if not cdek_pickpoint_info or not keep_until:
+                log.error('Something is wrong with cdek_status = %s', cdek_pickpoint_info)
+                return ""
+            pickpoint_msg = (f"\nТип доставки: СДЭК"
+                            f"\nТрек-номер для отслеживания: {track_number}"
+                            f"\nАдрес ПВЗ: {pickpoint_address}"
+                            f"\nСрок хранения до: {keep_until[:-10]}")
+            return pickpoint_msg
         cdek_status = CdekMethods.get_cdek_status(cdek_uuid)
         delivery_status = cdek_status.get("status")
         planned_date = cdek_status.get("planned_date")
