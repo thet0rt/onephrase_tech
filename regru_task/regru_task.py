@@ -559,6 +559,7 @@ class TgIntegration:
                 return ""
             pickpoint_msg = (f"\nТип доставки: СДЭК"
                             f"\nТрек-номер для отслеживания: {track_number}"
+                            f"\nОтследить на сайте: https://cdek.ru/ru/tracking/"
                             f"\nАдрес ПВЗ: {pickpoint_address}"
                             f"\nСрок хранения до: {keep_until[:-10]}")
             return pickpoint_msg
@@ -570,6 +571,7 @@ class TgIntegration:
             return ""
         delivery_msg = (f"\nТип доставки: СДЭК"
                         f"\nТрек-номер для отслеживания: {track_number}"
+                        f"\nОтследить на сайте: https://cdek.ru/ru/tracking/"
                         f"\nСтатус доставки: {delivery_status}"
                         f"\nОриентировочная дата прибытия: {planned_date}")
         return delivery_msg
@@ -584,6 +586,7 @@ class TgIntegration:
             return ""
         delivery_msg = (f"\nТип доставки: Почта России"
                         f"\nТрек-номер для отслеживания: {ruspost_tracking_number}"
+                        f"\nОтследить на сайте: https://www.pochta.ru/tracking"
                         f"\nСтатус доставки: {delivery_status}")
         if planned_date:
             delivery_msg += f"\nОриентировочная дата прибытия: {planned_date}"
