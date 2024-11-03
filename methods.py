@@ -2,6 +2,7 @@ import os
 from typing import Optional
 
 import retailcrm
+import requests
 
 from db import r
 from log_settings import log
@@ -142,3 +143,37 @@ def get_date_from_redis(key: str):
 def humanize_exp_date(exp_date):
     exp_date += timedelta(hours=3)
     return exp_date.strftime("%d %B %Y %H:%M")
+
+
+def get_session_data(session_id) -> Optional[dict]:
+    url = f'https://console.bot-marketing.com/api/public/tunnelSessions/{session_id}'
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        session_data = response.json()
+    except Exception as exc:
+        log.exception(exc)
+        return
+    return session_data
+
+
+def get_tg_id_by_session_id(session_id):
+    session_data = get_session_data(session_id)
+    if not session_data:
+        return
+    tg_id = session_data.get('chat', {}).get('messengerExternalId')
+    return tg_id
+
+
+def check_if_chat_member_by_tg_id(tg_id) -> Optional[bool]:
+    url = f'{os.getenv("tg_chat_member_link")}{tg_id}'
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        tg_data = response.json()
+        if not tg_data.get('ok'):
+            return
+        status = tg_data.get('result', {}).get('status')
+        return status == 'member'
+    except Exception as exc:
+        log.exception(exc)

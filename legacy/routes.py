@@ -3,20 +3,22 @@ import os
 import re
 from uuid import uuid4
 
-from flask import request, url_for, flash, redirect, jsonify
 from flask import Response
 from flask import render_template
+from flask import request, url_for, flash, redirect, jsonify
 from flask import send_file, send_from_directory
+from flask_smorest import abort
 from werkzeug.utils import secure_filename
 
 from analytics import Analytics, AnalyticsB2C
-from log_settings import log
-from methods import handle_webhook_b2c, handle_webhook_b2b, allowed_file, humanize_exp_date, get_date_from_redis
-from tasks import sync_analytics, create_links_from_photos, sync_analytics_b2c
 from const import UPLOAD_FOLDER
-from regru_task.regru_task import TgIntegration
-from . import legacy_bp
 from db import r
+from log_settings import log
+from methods import handle_webhook_b2c, handle_webhook_b2b, allowed_file, humanize_exp_date, get_date_from_redis, \
+    get_tg_id_by_session_id, check_if_chat_member_by_tg_id
+from regru_task.regru_task import TgIntegration
+from tasks import sync_analytics, create_links_from_photos, sync_analytics_b2c
+from . import legacy_bp
 
 
 @legacy_bp.route("/download/photo/<filename>", methods=["GET"])
@@ -207,3 +209,12 @@ def get_order_by_order_number(order_number):
     for i, order in enumerate(msg, 1):
         response.update({f'order_{i}': order})
     return jsonify(response)
+
+
+@legacy_bp.get('is_tg_member/<session_id>')
+def check_tg_member(session_id):
+    tg_id = get_tg_id_by_session_id(session_id)
+    if not tg_id:
+        abort(404, message='tg_id not found God knows why')
+    is_chat_member = check_if_chat_member_by_tg_id(tg_id)
+    return jsonify({'is_member': is_chat_member})
