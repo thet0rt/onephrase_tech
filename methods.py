@@ -174,6 +174,6 @@ def check_if_chat_member_by_tg_id(tg_id) -> Optional[bool]:
         if not tg_data.get('ok'):
             return
         status = tg_data.get('result', {}).get('status')
-        return status == 'member'
+        return status in ('member', 'creator')
     except Exception as exc:
         log.exception(exc)

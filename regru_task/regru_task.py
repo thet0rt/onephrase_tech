@@ -10,6 +10,7 @@ import requests
 import retailcrm
 from cachetools import TTLCache, cached
 from gspread import Spreadsheet
+from holidays_ru import check_holiday
 
 from log_settings import log
 from mail import send_email
@@ -558,10 +559,10 @@ class TgIntegration:
                 log.error('Something is wrong with cdek_status = %s', cdek_pickpoint_info)
                 return ""
             pickpoint_msg = (f"\nТип доставки: СДЭК"
-                            f"\nТрек-номер для отслеживания: {track_number}"
-                            f"\nОтследить на сайте: https://cdek.ru/ru/tracking/"
-                            f"\nАдрес ПВЗ: {pickpoint_address}"
-                            f"\nСрок хранения до: {keep_until[:-10]}")
+                             f"\nТрек-номер для отслеживания: {track_number}"
+                             f"\nОтследить на сайте: https://cdek.ru/ru/tracking/"
+                             f"\nАдрес ПВЗ: {pickpoint_address}"
+                             f"\nСрок хранения до: {keep_until[:-10]}")
             return pickpoint_msg
         cdek_status = CdekMethods.get_cdek_status(cdek_uuid)
         delivery_status = cdek_status.get("status")
@@ -615,7 +616,16 @@ class TgIntegration:
         return ruspost_status
 
     @staticmethod
-    def get_dispatch_msg_new(order: dict, count_logic: str, days_count: tuple) -> str:
+    def add_working_days(start_date, days_count):
+        sending_date = start_date
+        for i in range(days_count - 1):
+            while True:
+                sending_date = sending_date + timedelta(days=1)
+                if not check_holiday(sending_date):
+                    break
+        return sending_date
+
+    def get_dispatch_msg_new(self, order: dict, count_logic: str, days_count: tuple) -> str:
         '''
         real_date_of_payment + days_count
         '''
@@ -630,9 +640,8 @@ class TgIntegration:
         else:
             log.error('Count logic not found in config')
             return ''
-
-        sending_date_1 = start_date + timedelta(days=days_count[0])
-        sending_date_2 = start_date + timedelta(days=days_count[1])
+        sending_date_1 = self.add_working_days(start_date, days_count[0])
+        sending_date_2 = self.add_working_days(start_date, days_count[1])
         sending_date_1 = sending_date_1.strftime("%d.%m.%Y")
         sending_date_2 = sending_date_2.strftime("%d.%m.%Y")
         return f"Ориентировочная дата отправки {sending_date_1} - {sending_date_2}"

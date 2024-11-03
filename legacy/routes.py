@@ -198,11 +198,11 @@ def get_order_by_phone_number(phone_number):
 
 @legacy_bp.get(f"/{os.getenv('SECRET_PATH_2')}/<order_number>")
 def get_order_by_order_number(order_number):
-    if not re.fullmatch(r'[0-9]{1,5}[ACАС]', order_number):
+    if not re.fullmatch(r'[0-9]{1,5}[ACАСаaсc]', order_number):
         response = {'order_1': 'invalid format'}
         return jsonify(response), 400
     tg_integration = TgIntegration()
-    msg = tg_integration.get_order_by_order_number_msg(order_number)
+    msg = tg_integration.get_order_by_order_number_msg(order_number.upper())
     if not msg:
         return Response('Orders not found', 204)
     response = {}
