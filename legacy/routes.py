@@ -218,9 +218,3 @@ def check_tg_member(session_id):
         abort(404, message='tg_id not found God knows why')
     is_chat_member = check_if_chat_member_by_tg_id(tg_id)
     return jsonify({'is_member': is_chat_member})
-
-
-@legacy_bp.get('start_task')
-def check_tg_member():
-    a = CrmUpdatesHandler()
-    a.update_status()
