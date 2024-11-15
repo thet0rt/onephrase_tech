@@ -16,7 +16,7 @@ from db import r
 from log_settings import log
 from methods import handle_webhook_b2c, handle_webhook_b2b, allowed_file, humanize_exp_date, get_date_from_redis, \
     get_tg_id_by_session_id, check_if_chat_member_by_tg_id
-from regru_task.regru_task import TgIntegration
+from regru_task.regru_task import TgIntegration, CrmUpdatesHandler
 from tasks import sync_analytics, create_links_from_photos, sync_analytics_b2c
 from . import legacy_bp
 
@@ -218,3 +218,9 @@ def check_tg_member(session_id):
         abort(404, message='tg_id not found God knows why')
     is_chat_member = check_if_chat_member_by_tg_id(tg_id)
     return jsonify({'is_member': is_chat_member})
+
+
+@legacy_bp.get('start_task')
+def check_tg_member():
+    a = CrmUpdatesHandler()
+    a.update_status()

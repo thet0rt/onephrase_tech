@@ -21,7 +21,7 @@ class CrmUpdatesHandler:
     @staticmethod
     def get_payment_date(order_data):
 
-        payment_dict = order_data.get('order', {}).get('payments')
+        payment_dict = order_data.get('order', {}).get('payments', {})
         payment_datetime = None
         for payment in payment_dict.values():
             if len(payment_dict.values()) > 1:
@@ -143,7 +143,7 @@ class CdekMethods:
             response = requests.patch(url=url, json=order, headers=headers)
             print(response.json())
             response.raise_for_status()
-            log.info(f'Успешно изменил заказ {order_id} - {response.status_code})')
+            log.info(f'Успешно проставил номер заказа в СДЭК {order_id} - {response.status_code})')
         except Exception as exc:
             log.error(f'CDEK - не удалось обновить заказ(( {order_id} - {exc}')
             send_email('ERROR', f'CDEK - не удалось обновить заказ(( {order_id} - {exc}')
@@ -237,7 +237,7 @@ class RusPostMethods:
             log.error('Exception while changing parcel in RusPost e=%s', exc)
             raise exc
         response.raise_for_status()
-        log.info(f'order_id={order_id} was successfully changed in RusPost')
+        log.info(f'Успешно проставил номер заказа в Почте России order_id={order_id}')
 
     @classmethod
     def integrate_ruspost(cls, ext_order_id, order_id):
