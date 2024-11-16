@@ -42,10 +42,12 @@ services:
       - discovery.type=single-node
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - xpack.security.enabled=true
+      - ES_JAVA_OPTS=-Xms2g -Xmx2g
     ports:
       - "9200:9200"
     volumes:
       - es_data:/usr/share/elasticsearch/data
+    mem_limit: 4g
 
   filebeat:
     image: dockerhub.timeweb.cloud/elastic/filebeat:8.10.2
