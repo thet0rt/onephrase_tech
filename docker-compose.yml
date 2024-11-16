@@ -40,6 +40,8 @@ services:
     container_name: elasticsearch
     environment:
       - discovery.type=single-node
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
+      - xpack.security.enabled=true
     ports:
       - "9200:9200"
     volumes:
@@ -59,6 +61,8 @@ services:
     container_name: kibana
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=${KIBANA_USER}
+      - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
     ports:
     - "5601:5601"
     depends_on:
