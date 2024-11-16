@@ -1,0 +1,20 @@
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /usr/share/app/app.log
+    fields:
+      app_name: onephrase_tech
+    fields_under_root: true
+    json.keys_under_root: true  # Ключи json распределяются в отдельные поля
+    json.add_error_key: true  # Добавляет поле ошибок, если json некорректен
+    json.overwrite_keys: true
+
+setup.template:
+  name: "onephrase_tech_logs"
+  pattern: "onephrase_tech_logs-*"
+  enabled: true
+output.elasticsearch:
+  hosts: ["http://elasticsearch:9200"]
+  allow_older_versions: true
+  index: "onephrase_tech_logs-%{+yyyy.MM.dd}"

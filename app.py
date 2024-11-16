@@ -7,13 +7,12 @@ import os
 from db import db
 from flask_login import LoginManager
 from flask_smorest import Api
+from log_settings import Logging
 
 from models import User
 from money import money_bp
 
 app = Flask(__name__)
-
-
 
 
 connection_str = f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@" \
@@ -34,6 +33,9 @@ app.config["OPENAPI_URL_PREFIX"] = "/"
 app.config["OPENAPI_JSON_PATH"] = "api-spec.json"
 app.config["OPENAPI_SWAGGER_UI_PATH"] = os.getenv('OPENAPI_SWAGGER_UI_PATH')
 app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
+
+logging = Logging()
+logging.init_app(app)
 
 api = Api(app)
 

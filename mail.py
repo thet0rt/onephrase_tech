@@ -1,7 +1,9 @@
 import os
 import smtplib
-from log_settings import log
+import logging
 from email.mime.text import MIMEText
+
+log = logging.getLogger(os.getenv('APP_NAME'))
 
 
 def send_email(subject, body):

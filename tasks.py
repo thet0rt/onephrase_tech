@@ -8,10 +8,12 @@ from celery.schedules import crontab
 from analytics import Analytics, AnalyticsB2C
 from celery_settings import celery
 from creating_links import CreatingLinks
-from log_settings import log
+import logging
 from methods import get_date_from_redis
 from db import r
 from regru_task.regru_task import CrmUpdatesHandler
+
+log = logging.getLogger(os.getenv('APP_NAME'))
 
 
 @celery.task()

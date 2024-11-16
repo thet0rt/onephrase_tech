@@ -5,10 +5,11 @@ import retailcrm
 import requests
 
 from db import r
-from log_settings import log
+import logging
 from datetime import datetime, timedelta
 from celery_settings import celery
 
+log = logging.getLogger(os.getenv('APP_NAME'))
 client = retailcrm.v5(os.getenv("RETAIL_CRM_URI"), os.getenv("RETAIL_CRM_TOKEN"))
 ALLOWED_EXTENSIONS = {"zip"}
 

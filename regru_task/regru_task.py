@@ -12,9 +12,11 @@ from cachetools import TTLCache, cached
 from gspread import Spreadsheet
 from holidays_ru import check_holiday
 
-from log_settings import log
+import logging
 from mail import send_email
 from regru_task.exceptions import *
+
+log = logging.getLogger(os.getenv('APP_NAME'))
 
 
 class CrmUpdatesHandler:

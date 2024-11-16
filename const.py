@@ -1,1 +1,3 @@
 UPLOAD_FOLDER = "./media/zip_files"
+MAX_CROPPED_LOG_SIZE = 1500
+MAX_LOG_SIZE = 4095

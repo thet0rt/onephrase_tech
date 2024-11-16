@@ -7,8 +7,10 @@ import retailcrm
 from gspread import Spreadsheet
 from typing import Optional
 
-from log_settings import log
+import logging
 from copy import deepcopy
+
+log = logging.getLogger(os.getenv('APP_NAME'))
 
 
 class Analytics:

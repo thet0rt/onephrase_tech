@@ -5,11 +5,12 @@ from PIL import Image
 from transliterate import translit
 import re
 import openpyxl as xl
-from log_settings import log
+import logging
 import shutil
 from uuid import UUID
 from db import r
 
+log = logging.getLogger(os.getenv('APP_NAME'))
 
 class CreatingLinks:
 

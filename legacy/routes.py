@@ -11,14 +11,16 @@ from flask_smorest import abort
 from werkzeug.utils import secure_filename
 
 from analytics import Analytics, AnalyticsB2C
+import logging
 from const import UPLOAD_FOLDER
 from db import r
-from log_settings import log
 from methods import handle_webhook_b2c, handle_webhook_b2b, allowed_file, humanize_exp_date, get_date_from_redis, \
     get_tg_id_by_session_id, check_if_chat_member_by_tg_id
 from regru_task.regru_task import TgIntegration, CrmUpdatesHandler
 from tasks import sync_analytics, create_links_from_photos, sync_analytics_b2c
 from . import legacy_bp
+
+log = logging.getLogger(os.getenv('APP_NAME'))
 
 
 @legacy_bp.route("/download/photo/<filename>", methods=["GET"])
