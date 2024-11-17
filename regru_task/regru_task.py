@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import logging
 import os
 from datetime import datetime as dt
 from datetime import timedelta
@@ -12,7 +13,6 @@ from cachetools import TTLCache, cached
 from gspread import Spreadsheet
 from holidays_ru import check_holiday
 
-import logging
 from mail import send_email
 from regru_task.exceptions import *
 
@@ -198,6 +198,12 @@ class CdekMethods:
 class RusPostMethods:
     ruspost_token = os.getenv('ruspost_token')
     ruspost_key = os.getenv('ruspost_key')
+    tags = {
+        "color": "#222222",
+        "name": "печать",
+        "colorCode": "grayish-blue",
+        "attached": True
+    }
 
     @classmethod
     def get_ruspost_parcel(cls, ext_order_id):
@@ -377,6 +383,28 @@ class CrmMethods:
         response = cls.client.orders(filters=filters)
         if response.is_successful():
             return response.get_response()['orders']
+        log.error(response.get_error_msg())
+
+    def edit_customer(self, customer_id: int, delete: bool, tag: str):
+        customer = {
+            'id': customer_id,
+        }
+        if not delete:
+            customer.update(
+                {
+                    'addTags': [tag]
+                })
+        else:
+            customer.update(
+                {
+                    'removeTags': [tag]
+                }
+            )
+
+        response = self.client.customer_edit(customer, uid_type='id', site='new-onephrase-ru')
+        if response.is_successful():
+            log.info(response.get_response())
+            return response.get_response()
         log.error(response.get_error_msg())
 
 

@@ -19,6 +19,7 @@ from methods import handle_webhook_b2c, handle_webhook_b2b, allowed_file, humani
 from regru_task.regru_task import TgIntegration, CrmUpdatesHandler
 from tasks import sync_analytics, create_links_from_photos, sync_analytics_b2c
 from . import legacy_bp
+from .schemas import AddTagSchema
 
 log = logging.getLogger(os.getenv('APP_NAME'))
 
@@ -220,3 +221,12 @@ def check_tg_member(session_id):
         abort(404, message='tg_id not found God knows why')
     is_chat_member = check_if_chat_member_by_tg_id(tg_id)
     return jsonify({'is_member': is_chat_member})
+
+
+@legacy_bp.post('add_tag')
+@legacy_bp.arguments(AddTagSchema, location='form')
+def add_tag_to_customer(arguments: dict):
+    from regru_task.regru_task import CrmMethods
+    crm_client = CrmMethods()
+    response = crm_client.edit_customer(arguments['customer_id'], delete=False, tag=arguments['tag'])
+    return jsonify({'response': response})
