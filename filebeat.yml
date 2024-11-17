@@ -18,3 +18,6 @@ output.elasticsearch:
   hosts: ["http://elasticsearch:9200"]
   allow_older_versions: true
   index: "onephrase_tech_logs-%{+yyyy.MM.dd}"
+  username: "${FILEBEAT_USER}"
+  password: "${FILEBEAT_PASSWORD}"
+setup.ilm.enabled: false

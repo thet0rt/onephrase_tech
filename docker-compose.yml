@@ -41,7 +41,7 @@ services:
     environment:
       - discovery.type=single-node
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      - xpack.security.enabled=true
+      - xpack.security.enabled=false
       - ES_JAVA_OPTS=-Xms2g -Xmx2g
     ports:
       - "9200:9200"
@@ -57,6 +57,8 @@ services:
       - ./log/app.log:/usr/share/app/app.log:ro # Монтируем ваш лог-файл
     depends_on:
       - elasticsearch
+    env_file:
+      - ./.env
 
   kibana:
     image: kibana:8.10.2
