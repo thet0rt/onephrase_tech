@@ -124,7 +124,7 @@ class Analytics:
         if order_list_id:
             costs, total_pages = self.make_costs_request(order_list_id)
             while current_page <= total_pages:
-                costs, total_pages = self.make_costs_request(order_list_id)
+                costs, total_pages = self.make_costs_request(order_list_id, current_page)
                 for cost in costs:
                     total_sum += cost.get("summ", 0)
                 current_page += 1
