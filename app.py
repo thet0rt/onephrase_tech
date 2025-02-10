@@ -8,6 +8,8 @@ from db import db
 from flask_login import LoginManager
 from flask_smorest import Api
 from log_settings import Logging
+from flask_cors import CORS
+
 
 from models import User
 from money import money_bp
@@ -24,6 +26,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 db.init_app(app)
+
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # api
 app.config["API_TITLE"] = "Onephrase api"

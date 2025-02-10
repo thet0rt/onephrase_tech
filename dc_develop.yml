@@ -28,11 +28,25 @@ services:
     restart: always
     ports:
       - "5556:5555"
-      - "8015:8015"
+      - "8020:8015"
     depends_on:
       - redis
     volumes:
       - .:/app
+
+  frontend:
+    container_name: vue_app
+    build: ./frontend
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - app
+    env_file:
+      - dev.env
+
 volumes:
   redis_data:
   db:
