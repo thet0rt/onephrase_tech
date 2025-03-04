@@ -123,29 +123,29 @@ export default {
             img.src = this.selectedImage;
         },
         centerText() {
-        if (!this.ctx || !this.phrase) return;
+            if (!this.ctx || !this.phrase) return;
 
-        // Устанавливаем шрифт и цвет текста
-        this.ctx.font = "30px Arial";
-        this.ctx.fillStyle = "white";
+            // Устанавливаем шрифт и цвет текста
+            this.ctx.font = "30px Arial";
+            this.ctx.fillStyle = "white";
 
-        // Рассчитываем размер текста
-        const textWidth = this.ctx.measureText(this.phrase).width;
-        const textHeight = 30; // Высота текста (размер шрифта)
+            // Рассчитываем размер текста
+            const textWidth = this.ctx.measureText(this.phrase).width;
+            const textHeight = 30; // Высота текста (размер шрифта)
 
-        // Рассчитываем начальные координаты текста
-        this.textX = (this.canvas.width - textWidth) / 2;
-        this.textY = (this.canvas.height + textHeight) / 2;
+            // Рассчитываем начальные координаты текста
+            this.textX = (this.canvas.width - textWidth) / 2;
+            this.textY = (this.canvas.height + textHeight) / 2;
 
-        // Рисуем текст
-        // this.drawText();
-    },
-    // drawText() {
-    //     if (!this.ctx) return;
-    //     this.ctx.font = "30px Arial";
-    //     this.ctx.fillStyle = "white";
-    //     this.ctx.fillText(this.phrase, this.textX, this.textY);
-    // },
+            // Рисуем текст
+            // this.drawText();
+        },
+        // drawText() {
+        //     if (!this.ctx) return;
+        //     this.ctx.font = "30px Arial";
+        //     this.ctx.fillStyle = "white";
+        //     this.ctx.fillText(this.phrase, this.textX, this.textY);
+        // },
         closeModal() {
             this.isModalOpen = false;
         },
@@ -165,14 +165,22 @@ export default {
         },
         dragText(e) {
             if (this.isDragging) {
-                // Получаем координаты canvas относительно окна браузера
                 const rect = this.canvas.getBoundingClientRect();
 
-                // Обновляем координаты текста с учетом смещения
-                this.textX = e.clientX - rect.left - this.dragOffsetX;
-                this.textY = e.clientY - rect.top - this.dragOffsetY;
+                let newX = e.clientX - rect.left - this.dragOffsetX;
+                let newY = e.clientY - rect.top - this.dragOffsetY;
+
+                // Ограничиваем координаты в пределах canvas
+                newX = Math.max(0, Math.min(this.canvas.width - 100, newX)); // 100 — примерная ширина текста
+                newY = Math.max(0, Math.min(this.canvas.height - 30, newY)); // 30 — примерная высота текста
+
+                this.textX = newX;
+                this.textY = newY;
+
+                console.log("textX:", this.textX, "textY:", this.textY);
             }
         },
+
         stopDragging() {
             this.isDragging = false;
 
@@ -207,7 +215,7 @@ export default {
 
 .modal__content {
     position: relative;
-    background-color: rgb(144, 144, 231);
+    background-color: white;
     padding: 20px;
     border-radius: 10px;
     border: 1px solid black;
@@ -244,14 +252,22 @@ export default {
     border: none;
     outline: none;
     position: absolute;
-    color: #FFF; /* color */
-    text-align: center; /* text-align */
-    font-family: AvantGardeC, serif; /* font-family */
-    font-size: 32px; /* font-size */
-    font-style: normal; /* font-style */
-    font-weight: 400; /* font-weight */
-    line-height: 115%; /* line-height */
-    letter-spacing: 0.64px; /* letter-spacing */
+    color: #FFF;
+    /* color */
+    text-align: center;
+    /* text-align */
+    font-family: AvantGardeC, serif;
+    /* font-family */
+    font-size: 32px;
+    /* font-size */
+    font-style: normal;
+    /* font-style */
+    font-weight: 400;
+    /* font-weight */
+    line-height: 115%;
+    /* line-height */
+    letter-spacing: 0.64px;
+    /* letter-spacing */
     cursor: move;
     user-select: none;
     background-color: transparent;
