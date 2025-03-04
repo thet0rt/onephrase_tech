@@ -12,7 +12,7 @@
             </div>
             <div class="container__input_phrase">
                 <h4 class="input__phrase__name">введите фразу</h4>
-                <input class="input__phrase" type="text" v-model="phrase" placeholder="Введите фразу">
+                <textarea class='input__phrase' v-model="phrase" placeholder="Введите фразу"></textarea>
             </div>
             <div class="container__input_phrase">
                 <h4 class="input__phrase__name">введите номер дизайна</h4>
@@ -47,8 +47,8 @@
                     left: textX + 'px',
                     top: textY + 'px',
                     fontSize: fontSize + 'px'
-                }" contenteditable="true" @mousedown="startDragging"
-                    @input="updateText" @keydown="handleKeyDown">
+                }" contenteditable="true" @mousedown="startDragging" @input="updateText" @keydown="handleKeyDown" @blur="saveText"
+>
                     {{ phrase }}
                 </div>
             </div>
@@ -102,23 +102,27 @@ export default {
             this.phrase = e.target.innerHTML;
         },
         handleKeyDown(e) {
-            // Перехватываем клавишу "Enter" для правильной вставки переноса строки
             if (e.key === 'Enter') {
-                e.preventDefault(); // Останавливаем стандартное поведение
+                e.preventDefault();
+
                 const selection = window.getSelection();
+                if (!selection.rangeCount) return;
+
                 const range = selection.getRangeAt(0);
+                range.deleteContents();
 
-                // Вставляем <br> в место курсора
-                const br = document.createElement('br');
-                range.deleteContents(); // Удаляем текущее содержимое
-                range.insertNode(br); // Вставляем <br> в позицию курсора
+                const textNode = document.createTextNode('\n');
+                range.insertNode(textNode);
 
-                // Позиционируем курсор после <br>
-                range.setStartAfter(br);
-                range.setEndAfter(br);
+                range.setStartAfter(textNode);
+                range.setEndAfter(textNode);
                 selection.removeAllRanges();
                 selection.addRange(range);
             }
+        },
+        saveText() {
+            this.text = this.$refs.editable.innerText;
+            this.edit = false;
         },
         decreaseFontSize() {
             if (this.fontSize > 10) {  // Устанавливаем минимальный размер шрифта
@@ -300,6 +304,9 @@ export default {
     background-color: transparent;
     border: none;
     outline: none;
+    white-space: pre-line;
+    /* Отображает переносы строк */
+
 
 }
 </style>
