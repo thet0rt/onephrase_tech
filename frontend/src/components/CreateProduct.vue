@@ -40,13 +40,14 @@
         <!-- Модальное окно -->
         <div v-if="isModalOpen" class="modal">
             <span class="close" @click="closeModal">&times;</span>
-
-
             <div class="modal__content">
                 <canvas ref="canvas" class="modal__canvas"></canvas>
                 <!-- Редактируемый текст -->
-                <div v-if="isModalOpen" ref="editableText" class="editable-text"
-                    :style="{ left: textX + 'px', top: textY + 'px' }" contenteditable="true" @mousedown="startDragging"
+                <div v-if="isModalOpen" ref="editableText" class="editable-text" :style="{
+                    left: textX + 'px',
+                    top: textY + 'px',
+                    fontSize: fontSize + 'px'
+                }" contenteditable="true" @mousedown="startDragging"
                     @input="updateText" @keydown="handleKeyDown">
                     {{ phrase }}
                 </div>
@@ -58,6 +59,7 @@
         </div>
     </div>
 </template>
+
 
 <script>
 export default {
@@ -91,7 +93,7 @@ export default {
             dragOffsetX: 0,
             dragOffsetY: 0,
             backgroundImage: null,
-            fontSize: 32,
+            fontSize: 32,  // Начальный размер шрифта
         };
     },
     methods: {
@@ -123,7 +125,6 @@ export default {
                 this.fontSize -= 2;
             }
         },
-        // Увеличение шрифта
         increaseFontSize() {
             this.fontSize += 2;  // Увеличиваем размер шрифта
         },
@@ -170,32 +171,11 @@ export default {
                 this.textY = savedCoordinates.y;
 
                 // Рисуем текст в загруженных координатах
-                this.ctx.font = "32px AvantGardeC";
+                this.ctx.font = `${this.fontSize}px AvantGardeC`;
                 this.ctx.fillStyle = "white";
                 // this.ctx.fillText(this.phrase, this.textX, this.textY);
             };
             img.src = this.selectedImage;
-        },
-        centerText() {
-            if (!this.ctx || !this.phrase) return;
-
-            // Разделяем фразу на строки
-            const lines = this.phrase.split('<br>');
-
-            // Устанавливаем шрифт и цвет текста
-            this.ctx.font = "30px Arial";
-            this.ctx.fillStyle = "white";
-
-            // Начальная координата Y для первой строки
-            let lineY = this.canvas.height / 2 - (lines.length * 16) / 2;  // 16 — высота строки
-
-            // Рисуем текст строками
-            lines.forEach(line => {
-                const textWidth = this.ctx.measureText(line).width;
-                const textX = (this.canvas.width - textWidth) / 2;
-                this.ctx.fillText(line, textX, lineY);
-                lineY += 32; // Отступ для следующей строки
-            });
         },
         closeModal() {
             this.isModalOpen = false;
@@ -204,8 +184,6 @@ export default {
             this.isDragging = true;
             // Получаем координаты canvas относительно окна браузера
             const rect = this.canvas.getBoundingClientRect();
-
-
             // Рассчитываем смещение мыши относительно текста
             this.dragOffsetX = e.clientX - rect.left - this.textX;
             this.dragOffsetY = e.clientY - rect.top - this.textY;
@@ -227,7 +205,6 @@ export default {
             // Ограничиваем координаты в пределах canvas
             const textWidth = this.ctx.measureText(this.phrase).width;
 
-            // newX = Math.max(0, Math.min(this.canvas.width - textWidth, newX)); // Ограничиваем по ширине текста
             newY = Math.max(0, Math.min(this.canvas.height - 32, newY)); // Ограничиваем по высоте
 
             this.textX = newX;
@@ -240,13 +217,9 @@ export default {
         },
         stopDragging() {
             this.isDragging = false;
-
             // Убираем обработчики событий
             document.removeEventListener("mousemove", this.dragText);
             document.removeEventListener("mouseup", this.stopDragging);
-        },
-        updateText(e) {
-            this.phrase = e.target.innerText;
         }
     },
     mounted() {
@@ -257,14 +230,8 @@ export default {
             }
         });
     },
-    beforeDestroy() {
-        if (this.canvas) {
-            this.canvas.removeEventListener("mousedown", this.startDragging);
-            this.canvas.removeEventListener("mousemove", this.dragText);
-            this.canvas.removeEventListener("mouseup", this.stopDragging);
-        }
-    }
 };
+
 </script>
 
 <style scoped>
