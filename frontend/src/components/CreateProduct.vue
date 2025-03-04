@@ -47,13 +47,14 @@
                     left: textX + 'px',
                     top: textY + 'px',
                     fontSize: fontSize + 'px'
-                }" contenteditable="true" @mousedown="startDragging" @input="updateText" @keydown="handleKeyDown" @blur="saveText"
->
+                }" contenteditable="true" @mousedown="startDragging" @input="updateText" @keydown="handleKeyDown"
+                    @blur="saveText">
                     {{ phrase }}
                 </div>
             </div>
             <div class="font-size-controls">
                 <button @click="decreaseFontSize">Уменьшить шрифт</button>
+                <span>Размер шрифта: {{ fontSize }}px</span>
                 <button @click="increaseFontSize">Увеличить шрифт</button>
             </div>
         </div>
@@ -77,16 +78,18 @@ export default {
                 { src: "t_shirt_true_over.png", bigSrc: "t_shirt_true_over_big.png" }
             ],
             imagesTextCoordinates: [
-                { x: 100, y: 100 },
-                { x: 100, y: 100 },
-                { x: 100, y: 100 },
-                { x: 100, y: 100 },
-                { x: 100, y: 100 }
+                { x: 180, y: 365 },
+                { x: 180, y: 365 },
+                { x: 185, y: 300 },
+                { x: 180, y: 365 },
+                { x: 185, y: 300 }
             ],
+            imagesFontSizes: [20, 20, 14, 20, 16], // Начальные размеры шрифта для каждой картинки
+            selectedImageIndex: null, // Индекс выбранной картинки
             isModalOpen: false,
             selectedImage: "",
-            textX: 100,
-            textY: 100,
+            textX: 180,
+            textY: 365,
             isDragging: false,
             canvas: null,
             ctx: null,
@@ -125,12 +128,14 @@ export default {
             this.edit = false;
         },
         decreaseFontSize() {
-            if (this.fontSize > 10) {  // Устанавливаем минимальный размер шрифта
-                this.fontSize -= 2;
+            if (this.imagesFontSizes[this.selectedImageIndex] > 10) {  // Минимальный размер шрифта
+                this.imagesFontSizes[this.selectedImageIndex] -= 2;
+                this.fontSize = this.imagesFontSizes[this.selectedImageIndex]; // Обновляем текущий размер шрифта
             }
         },
         increaseFontSize() {
-            this.fontSize += 2;  // Увеличиваем размер шрифта
+            this.imagesFontSizes[this.selectedImageIndex] += 2;  // Увеличиваем размер шрифта
+            this.fontSize = this.imagesFontSizes[this.selectedImageIndex]; // Обновляем текущий размер шрифта
         },
         resetForm() {
             this.phrase = "";
@@ -155,6 +160,9 @@ export default {
                     this.loadImageAndDraw();
                 }
             });
+
+            // Загружаем размер шрифта для выбранной картинки
+            this.fontSize = this.imagesFontSizes[this.selectedImageIndex];
         },
         loadImageAndDraw() {
             const img = new Image();
@@ -169,12 +177,12 @@ export default {
                 // Рисуем фон
                 this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
 
-                // Загружаем координаты для текста из imagesTextCoordinates
+                // Загружаем координаты и размер шрифта для текста
                 const savedCoordinates = this.imagesTextCoordinates[this.selectedImageIndex];
                 this.textX = savedCoordinates.x;
                 this.textY = savedCoordinates.y;
 
-                // Рисуем текст в загруженных координатах
+                // Устанавливаем размер шрифта
                 this.ctx.font = `${this.fontSize}px AvantGardeC`;
                 this.ctx.fillStyle = "white";
                 // this.ctx.fillText(this.phrase, this.textX, this.textY);
@@ -283,11 +291,11 @@ export default {
     border: none;
     outline: none;
     position: absolute;
-    color: #dd1212;
+    color: white;
     /* color */
     text-align: center;
     /* text-align */
-    font-family: AvantGardeC, serif;
+    font-family: "Avant Garde", Avantgarde, "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
     /* font-family */
     font-size: 32px;
     /* font-size */
