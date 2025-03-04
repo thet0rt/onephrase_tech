@@ -39,7 +39,7 @@
 
         <!-- Модальное окно -->
         <div v-if="isModalOpen" class="modal">
-                <span class="close" @click="closeModal">&times;</span>
+            <span class="close" @click="closeModal">&times;</span>
 
             <div class="modal__content">
                 <canvas ref="canvas" class="modal__canvas"></canvas>
@@ -69,6 +69,13 @@ export default {
                 { src: "t_shirt_basic.png", bigSrc: "t_shirt_basic_big.png" },
                 { src: "t_shirt_true_over.png", bigSrc: "t_shirt_true_over_big.png" }
             ],
+            imagesTextCoordinates: [
+                { x: 100, y: 100 },
+                { x: 100, y: 100 },
+                { x: 100, y: 100 },
+                { x: 100, y: 100 },
+                { x: 100, y: 100 }
+            ],
             isModalOpen: false,
             selectedImage: "",
             textX: 100,
@@ -95,6 +102,7 @@ export default {
             alert("Файл сгенерирован!");
         },
         openModal(index) {
+            this.selectedImageIndex = index; // Сохраняем индекс выбранной картинки
             this.selectedImage = this.images[index].bigSrc;
             this.isModalOpen = true;
             this.$nextTick(() => {
@@ -118,8 +126,15 @@ export default {
                 // Рисуем фон
                 this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
 
-                // Устанавливаем текст по центру canvas
-                this.centerText();
+                // Загружаем координаты для текста из imagesTextCoordinates
+                const savedCoordinates = this.imagesTextCoordinates[this.selectedImageIndex];
+                this.textX = savedCoordinates.x;
+                this.textY = savedCoordinates.y;
+
+                // Рисуем текст в загруженных координатах
+                this.ctx.font = "32px AvantGardeC";
+                this.ctx.fillStyle = "white";
+                // this.ctx.fillText(this.phrase, this.textX, this.textY);
             };
             img.src = this.selectedImage;
         },
@@ -138,14 +153,14 @@ export default {
             this.textX = (this.canvas.width - textWidth) / 2;
             this.textY = (this.canvas.height + textHeight) / 2;
 
-        //     // Рисуем текст
-        //     this.drawText();
-        // },
-        // drawText() {
-        //     if (!this.ctx) return;
-        //     this.ctx.font = "30px Arial";
-        //     this.ctx.fillStyle = "white";
-        //     this.ctx.fillText(this.phrase, this.textX, this.textY);
+            //     // Рисуем текст
+            //     this.drawText();
+            // },
+            // drawText() {
+            //     if (!this.ctx) return;
+            //     this.ctx.font = "30px Arial";
+            //     this.ctx.fillStyle = "white";
+            //     this.ctx.fillText(this.phrase, this.textX, this.textY);
         },
         closeModal() {
             this.isModalOpen = false;
@@ -177,15 +192,16 @@ export default {
             // Ограничиваем координаты в пределах canvas
             const textWidth = this.ctx.measureText(this.phrase).width;
 
-            newX = Math.max(0, Math.min(this.canvas.width - 100, newX)); // 100 — примерная ширина текста
-            // newX = Math.max(0, Math.min(this.canvas.width - 100, newX)); // 100 — примерная ширина текста
-
-            newY = Math.max(0, Math.min(this.canvas.height - 32, newY)); // 32 — примерная высота текста
+            newX = Math.max(0, Math.min(this.canvas.width - textWidth, newX)); // Ограничиваем по ширине текста
+            newY = Math.max(0, Math.min(this.canvas.height - 32, newY)); // Ограничиваем по высоте
 
             this.textX = newX;
             this.textY = newY;
-            console.log("textX:", this.textX, "textY:", this.textY);
 
+            // Сохраняем новые координаты в объекте imagesTextCoordinates
+            this.imagesTextCoordinates[this.selectedImageIndex] = { x: this.textX, y: this.textY };
+
+            console.log("textX:", this.textX, "textY:", this.textY);
         },
         stopDragging() {
             this.isDragging = false;
@@ -284,5 +300,4 @@ export default {
     outline: none;
 
 }
-
 </style>
