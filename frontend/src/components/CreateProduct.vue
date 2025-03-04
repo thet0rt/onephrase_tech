@@ -27,13 +27,21 @@
         <div class="components">
           <div v-for="(item, index) in images" :key="index" class="img__button">
             <img class="component_image" :src="item.src" alt="">
-            <button class="button__change" @click="changeImage(index)">изменить</button>
+            <button class="button__change" @click="openModal(index)">изменить</button>
           </div>
         </div>
         <div class="getfile__container">
           <p class="phrase__counter">количество фраз ({{ phraseCount }})</p>
           <button class="button_bottom" @click="addPhrase">Добавить ещё фразу</button>
           <button class="button_bottom" @click="generateFile">Сгенерировать файл</button>
+        </div>
+      </div>
+      
+      <!-- Модальное окно -->
+      <div v-if="isModalOpen" class="modal">
+        <div class="modal__content">
+          <span class="close" @click="closeModal">&times;</span>
+          <img :src="selectedImage" class="modal__image" alt="">
         </div>
       </div>
     </div>
@@ -48,13 +56,15 @@
         categories: ["", "", ""],
         phraseCount: 0,
         images: [
-          { src: "hoodie.png" },
-          { src: "sweetshirt.png" },
-          { src: "hoodie.png" },
-          { src: "longsleeve.png" },
-          { src: "t_shirt_basic.png" },
-          { src: "t_shirt_true_over.png" }
-        ]
+          { src: "hoodie.png", bigSrc: "hoodie_big.png" },
+          { src: "sweetshirt.png", bigSrc: "sweetshirt_big.png" },
+          { src: "hoodie.png", bigSrc: "hoodie_big.png" },
+          { src: "longsleeve.png", bigSrc: "longsleeve_big.png" },
+          { src: "t_shirt_basic.png", bigSrc: "t_shirt_basic_big.png" },
+          { src: "t_shirt_true_over.png", bigSrc: "t_shirt_true_over_big.png" }
+        ],
+        isModalOpen: false,
+        selectedImage: ""
       };
     },
     methods: {
@@ -70,8 +80,12 @@
       generateFile() {
         alert("Файл сгенерирован!");
       },
-      changeImage(index) {
-        alert(`Изменить изображение ${index + 1}`);
+      openModal(index) {
+        this.selectedImage = this.images[index].bigSrc;
+        this.isModalOpen = true;
+      },
+      closeModal() {
+        this.isModalOpen = false;
       }
     }
   };
@@ -79,5 +93,37 @@
   
   <style scoped>
   @import '@/assets/styles.css';
+  
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .modal__content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    position: relative;
+  }
+  
+  .modal__image {
+    width: 100%;
+    max-width: 500px;
+  }
+  
+  .close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    cursor: pointer;
+  }
   </style>
   
