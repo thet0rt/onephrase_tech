@@ -41,11 +41,13 @@
         <div v-if="isModalOpen" class="modal">
             <div class="modal__content">
                 <span class="close" @click="closeModal">&times;</span>
+
                 <canvas v-if="isModalOpen" ref="canvas" class="modal__canvas" @mousedown="startDragging"
-                    @mousemove="dragText" @mouseup="stopDragging" @mouseleave="stopDragging"></canvas>
+                    @mousemove="dragText" @mouseup="stopDragging" @mouseleave="stopDragging">
+                </canvas>
             </div>
-        </div>
-    </div>
+            </div>
+            </div>
 </template>
 
 <script>
@@ -70,7 +72,9 @@ export default {
             textY: 100,
             isDragging: false,
             canvas: null,
-            ctx: null
+            ctx: null,
+            dragOffsetX: 0,
+            dragOffsetY: 0
         };
     },
     methods: {
@@ -91,160 +95,89 @@ export default {
             this.isModalOpen = true;
             this.$nextTick(() => {
                 this.canvas = this.$refs.canvas;
-                console.log("openModal: Canvas is", this.canvas);
-
                 if (this.canvas) {
                     this.ctx = this.canvas.getContext("2d");
-                    if (this.ctx) {
-                        console.log("Context is available!");
-                        this.loadImageAndDraw();  // Теперь загружаем изображение перед рисованием
-                    }
+                    this.loadImageAndDraw();
                 }
             });
         },
-
-        // Метод для загрузки изображения и рисования на холсте
         loadImageAndDraw() {
             const img = new Image();
-            img.onload = () => {
-                // Отображаем изображение на холсте
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);  // Рисуем изображение, растягивая на весь холст
-                this.drawCanvas();  // Рисуем текст после изображения
-            };
-            img.src = this.selectedImage;  // Загружаем изображение по URL
-        },
-
-        closeModal() {
-            this.isModalOpen = false;
-        },
-        drawCanvas() {
-            this.canvas = this.$refs.canvas;
-            this.ctx = this.canvas.getContext("2d");
-            const img = new Image();
-            img.src = this.selectedImage;
             img.onload = () => {
                 this.canvas.width = img.width;
                 this.canvas.height = img.height;
                 this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
                 this.drawText();
             };
+            img.src = this.selectedImage;
+        },
+        closeModal() {
+            this.isModalOpen = false;
         },
         drawText() {
             if (!this.ctx) return;
-            console.log(`Drawing text at: (${this.textX}, ${this.textY})`);
             this.ctx.font = "30px Arial";
             this.ctx.fillStyle = "black";
             this.ctx.fillText(this.phrase, this.textX, this.textY);
         },
-        // Метод для рисования текста на холсте
-        // drawCanvas() {
-        //     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        //     this.ctx.fillStyle = "#000000";
-        //     this.ctx.font = "30px Arial";
-        //     this.ctx.fillText("Hello World", this.textX, this.textY);
-        //     console.log(`Drawing text at: (${this.textX}, ${this.textY})`);
-        // },
-
-        // Метод для начала перетаскивания текста
         startDragging(e) {
-            const mouseX = e.offsetX;
-            const mouseY = e.offsetY;
+            const rect = this.canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
             if (this.isMouseOverText(mouseX, mouseY)) {
                 this.isDragging = true;
                 this.dragOffsetX = mouseX - this.textX;
                 this.dragOffsetY = mouseY - this.textY;
-                console.log("Dragging started");
             }
         },
-
-        // Метод для перемещения текста при перетаскивании
         dragText(e) {
             if (this.isDragging) {
-                this.textX = e.offsetX - this.dragOffsetX;
-                this.textY = e.offsetY - this.dragOffsetY;
-                this.drawCanvas();
+                const rect = this.canvas.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                this.textX = mouseX - this.dragOffsetX;
+                this.textY = mouseY - this.dragOffsetY;
+                this.redrawCanvas();
             }
         },
-
-        // Метод для завершения перетаскивания
         stopDragging() {
             this.isDragging = false;
-            console.log("Dragging stopped");
         },
-
-        // Проверяем, находится ли курсор мыши на тексте
         isMouseOverText(mouseX, mouseY) {
-            return (
-                mouseX >= this.textX &&
-                mouseX <= this.textX + this.ctx.measureText("Hello World").width &&
-                mouseY >= this.textY - 30 &&
-                mouseY <= this.textY
-            );
-        },
-        handleMouseDown(event) {
-            const rect = this.canvas.getBoundingClientRect();
-            const mouseX = event.clientX - rect.left;
-            const mouseY = event.clientY - rect.top;
             const textWidth = this.ctx.measureText(this.phrase).width;
             const textHeight = 30; // высота шрифта
-
-            if (
+            return (
                 mouseX >= this.textX &&
                 mouseX <= this.textX + textWidth &&
                 mouseY >= this.textY - textHeight &&
                 mouseY <= this.textY
-            ) {
-                this.isDragging = true;
-                this.offsetX = mouseX - this.textX;
-                this.offsetY = mouseY - this.textY;
-            }
-        },
-        handleMouseMove(event) {
-            if (this.isDragging) {
-                const rect = this.canvas.getBoundingClientRect();
-                const mouseX = event.clientX - rect.left;
-                const mouseY = event.clientY - rect.top;
-
-                this.textX = mouseX - this.offsetX;
-                this.textY = mouseY - this.offsetY;
-                this.redrawCanvas();
-            }
-        },
-        handleMouseUp() {
-            this.isDragging = false;
+            );
         },
         redrawCanvas() {
-            // Очищаем canvas
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-            // Рисуем изображение
             const img = new Image();
-            img.src = this.selectedImage;
             img.onload = () => {
                 this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
                 this.drawText();
             };
-        },
+            img.src = this.selectedImage;
+        }
     },
     mounted() {
         this.$nextTick(() => {
             this.canvas = this.$refs.canvas;
             if (this.canvas) {
                 this.ctx = this.canvas.getContext("2d");
-                if (this.ctx) {
-                    this.canvas.addEventListener("mousedown", this.handleMouseDown.bind(this));
-                    this.canvas.addEventListener("mousemove", this.handleMouseMove.bind(this));
-                    this.canvas.addEventListener("mouseup", this.handleMouseUp.bind(this));
-                }
             }
         });
     },
     beforeDestroy() {
         if (this.canvas) {
-            this.canvas.removeEventListener("mousedown", this.handleMouseDown);
-            this.canvas.removeEventListener("mousemove", this.handleMouseMove);
-            this.canvas.removeEventListener("mouseup", this.handleMouseUp);
+            this.canvas.removeEventListener("mousedown", this.startDragging);
+            this.canvas.removeEventListener("mousemove", this.dragText);
+            this.canvas.removeEventListener("mouseup", this.stopDragging);
         }
     }
 };
@@ -258,34 +191,26 @@ export default {
     background-color: #ffffff;
     padding: 20px;
     border-radius: 10px;
-    /* Обрамление вокруг изображения */
     border: 1px solid black;
 }
 
 .modal__canvas {
     display: block;
     border: 2px solid #000000;
-    /* Белое обрамление */
     max-width: 90%;
-    /* Чтобы картинка не выходила за пределы окна */
     max-height: 90%;
-    /* Ограничиваем высоту */
 }
 
 .modal {
     position: fixed;
-    /* Фиксируем модальное окно */
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background-color: rgba(255, 255, 255, 0.5);
-    /* Прозрачный фон */
-    /* border: 10px solid black; */
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
-    /* Чтобы окно было поверх других элементов */
 }
 </style>
