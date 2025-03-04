@@ -41,7 +41,7 @@
       <div v-if="isModalOpen" class="modal">
         <div class="modal__content">
           <span class="close" @click="closeModal">&times;</span>
-          <img :src="selectedImage" class="modal__image" alt="">
+          <canvas ref="canvas" class="modal__canvas" @mousedown="startDrag" @mousemove="onDrag" @mouseup="stopDrag"></canvas>
         </div>
       </div>
     </div>
@@ -64,7 +64,12 @@
           { src: "t_shirt_true_over.png", bigSrc: "t_shirt_true_over_big.png" }
         ],
         isModalOpen: false,
-        selectedImage: ""
+        selectedImage: "",
+        textX: 50,
+        textY: 50,
+        isDragging: false,
+        canvas: null,
+        ctx: null
       };
     },
     methods: {
@@ -83,9 +88,47 @@
       openModal(index) {
         this.selectedImage = this.images[index].bigSrc;
         this.isModalOpen = true;
+        this.$nextTick(this.drawCanvas);
       },
       closeModal() {
         this.isModalOpen = false;
+      },
+      drawCanvas() {
+        this.canvas = this.$refs.canvas;
+        this.ctx = this.canvas.getContext("2d");
+        const img = new Image();
+        img.src = this.selectedImage;
+        img.onload = () => {
+          this.canvas.width = img.width / 2;
+          this.canvas.height = img.height / 2;
+          this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
+          this.drawText();
+        };
+      },
+      drawText() {
+        if (!this.ctx) return;
+        this.ctx.font = "20px Arial";
+        this.ctx.fillStyle = "black";
+        this.ctx.fillText(this.phrase, this.textX, this.textY);
+      },
+      startDrag(event) {
+        const rect = this.canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        if (x >= this.textX && x <= this.textX + 100 && y >= this.textY - 20 && y <= this.textY) {
+          this.isDragging = true;
+        }
+      },
+      onDrag(event) {
+        if (!this.isDragging) return;
+        const rect = this.canvas.getBoundingClientRect();
+        this.textX = event.clientX - rect.left;
+        this.textY = event.clientY - rect.top;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.drawCanvas();
+      },
+      stopDrag() {
+        this.isDragging = false;
       }
     }
   };
@@ -113,9 +156,10 @@
     position: relative;
   }
   
-  .modal__image {
+  .modal__canvas {
     width: 100%;
     max-width: 500px;
+    cursor: grab;
   }
   
   .close {
