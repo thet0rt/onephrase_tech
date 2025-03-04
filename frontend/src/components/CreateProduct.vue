@@ -107,33 +107,76 @@ export default {
         loadImageAndDraw() {
             const img = new Image();
             img.onload = () => {
+                // Устанавливаем размер canvas
                 this.canvas.width = img.width * 0.5;
                 this.canvas.height = img.height * 0.5;
+
+                // Сохраняем изображение как фон
                 this.backgroundImage = img;
+
+                // Рисуем фон
                 this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
+
+                // Устанавливаем текст по центру canvas
+                this.centerText();
             };
             img.src = this.selectedImage;
         },
+        centerText() {
+        if (!this.ctx || !this.phrase) return;
+
+        // Устанавливаем шрифт и цвет текста
+        this.ctx.font = "30px Arial";
+        this.ctx.fillStyle = "white";
+
+        // Рассчитываем размер текста
+        const textWidth = this.ctx.measureText(this.phrase).width;
+        const textHeight = 30; // Высота текста (размер шрифта)
+
+        // Рассчитываем начальные координаты текста
+        this.textX = (this.canvas.width - textWidth) / 2;
+        this.textY = (this.canvas.height + textHeight) / 2;
+
+        // Рисуем текст
+        // this.drawText();
+    },
+    // drawText() {
+    //     if (!this.ctx) return;
+    //     this.ctx.font = "30px Arial";
+    //     this.ctx.fillStyle = "white";
+    //     this.ctx.fillText(this.phrase, this.textX, this.textY);
+    // },
         closeModal() {
             this.isModalOpen = false;
         },
         startDragging(e) {
             this.isDragging = true;
+
+            // Получаем координаты canvas относительно окна браузера
             const rect = this.canvas.getBoundingClientRect();
-            this.dragOffsetX = e.clientX - this.textX;
-            this.dragOffsetY = e.clientY - this.textY;
+
+            // Рассчитываем смещение мыши относительно текста
+            this.dragOffsetX = e.clientX - rect.left - this.textX;
+            this.dragOffsetY = e.clientY - rect.top - this.textY;
+
+            // Добавляем обработчики событий для перемещения и остановки
             document.addEventListener("mousemove", this.dragText);
             document.addEventListener("mouseup", this.stopDragging);
         },
         dragText(e) {
             if (this.isDragging) {
+                // Получаем координаты canvas относительно окна браузера
                 const rect = this.canvas.getBoundingClientRect();
+
+                // Обновляем координаты текста с учетом смещения
                 this.textX = e.clientX - rect.left - this.dragOffsetX;
                 this.textY = e.clientY - rect.top - this.dragOffsetY;
             }
         },
         stopDragging() {
             this.isDragging = false;
+
+            // Убираем обработчики событий
             document.removeEventListener("mousemove", this.dragText);
             document.removeEventListener("mouseup", this.stopDragging);
         },
@@ -192,13 +235,28 @@ export default {
 
 .editable-text {
     position: absolute;
-    font-size: 30px;
+    /* font-size: 30px;
     font-family: Arial, sans-serif;
-    color: white;
+    color: white; */
     cursor: move;
     user-select: none;
     background-color: transparent;
     border: none;
     outline: none;
+    position: absolute;
+    color: #FFF; /* color */
+    text-align: center; /* text-align */
+    font-family: AvantGardeC, serif; /* font-family */
+    font-size: 32px; /* font-size */
+    font-style: normal; /* font-style */
+    font-weight: 400; /* font-weight */
+    line-height: 115%; /* line-height */
+    letter-spacing: 0.64px; /* letter-spacing */
+    cursor: move;
+    user-select: none;
+    background-color: transparent;
+    border: none;
+    outline: none;
+
 }
 </style>
