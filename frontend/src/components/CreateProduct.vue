@@ -100,6 +100,27 @@ export default {
         };
     },
     methods: {
+        generateFile() {
+            // Создаем словарь с данными для каждого продукта
+            const productsData = this.images.map((image, index) => ({
+                product: image.src, // Название продукта (можно заменить на что-то более информативное)
+                coordinates: this.imagesTextCoordinates[index], // Координаты текста
+                fontSize: this.imagesFontSizes[index] // Размер шрифта
+            }));
+
+            // Выводим словарь в консоль (для отладки)
+            console.log("Сгенерированные данные:", productsData);
+
+            // Отображаем словарь в модальном окне
+            this.showGeneratedData(productsData);
+        },
+        showGeneratedData(data) {
+            // Преобразуем данные в строку для отображения
+            const dataString = JSON.stringify(data, null, 2);
+
+            // Создаем модальное окно для отображения данных
+            alert("Сгенерированные данные:\n" + dataString);
+        },
         updateText(e) {
             // При вводе текста сохраняем HTML с тегами <br> для переноса строк
             this.phrase = e.target.innerHTML;
@@ -145,9 +166,6 @@ export default {
         },
         addPhrase() {
             this.phraseCount++;
-        },
-        generateFile() {
-            alert("Файл сгенерирован!");
         },
         openModal(index) {
             this.selectedImageIndex = index; // Сохраняем индекс выбранной картинки
