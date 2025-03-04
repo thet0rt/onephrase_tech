@@ -118,7 +118,15 @@ export default {
                 selection.addRange(range);
             }
         },
-
+        decreaseFontSize() {
+            if (this.fontSize > 10) {  // Устанавливаем минимальный размер шрифта
+                this.fontSize -= 2;
+            }
+        },
+        // Увеличение шрифта
+        increaseFontSize() {
+            this.fontSize += 2;  // Увеличиваем размер шрифта
+        },
         resetForm() {
             this.phrase = "";
             this.designNumber = "";
