@@ -41,14 +41,19 @@
         <div v-if="isModalOpen" class="modal">
             <span class="close" @click="closeModal">&times;</span>
 
+
             <div class="modal__content">
                 <canvas ref="canvas" class="modal__canvas"></canvas>
                 <!-- Редактируемый текст -->
                 <div v-if="isModalOpen" ref="editableText" class="editable-text"
                     :style="{ left: textX + 'px', top: textY + 'px' }" contenteditable="true" @mousedown="startDragging"
-                    @input="updateText">
+                    @input="updateText" @keydown="handleKeyDown">
                     {{ phrase }}
                 </div>
+            </div>
+            <div class="font-size-controls">
+                <button @click="decreaseFontSize">Уменьшить шрифт</button>
+                <button @click="increaseFontSize">Увеличить шрифт</button>
             </div>
         </div>
     </div>
@@ -85,10 +90,35 @@ export default {
             ctx: null,
             dragOffsetX: 0,
             dragOffsetY: 0,
-            backgroundImage: null
+            backgroundImage: null,
+            fontSize: 32,
         };
     },
     methods: {
+        updateText(e) {
+            // При вводе текста сохраняем HTML с тегами <br> для переноса строк
+            this.phrase = e.target.innerHTML;
+        },
+        handleKeyDown(e) {
+            // Перехватываем клавишу "Enter" для правильной вставки переноса строки
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Останавливаем стандартное поведение
+                const selection = window.getSelection();
+                const range = selection.getRangeAt(0);
+
+                // Вставляем <br> в место курсора
+                const br = document.createElement('br');
+                range.deleteContents(); // Удаляем текущее содержимое
+                range.insertNode(br); // Вставляем <br> в позицию курсора
+
+                // Позиционируем курсор после <br>
+                range.setStartAfter(br);
+                range.setEndAfter(br);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+        },
+
         resetForm() {
             this.phrase = "";
             this.designNumber = "";
@@ -141,26 +171,23 @@ export default {
         centerText() {
             if (!this.ctx || !this.phrase) return;
 
+            // Разделяем фразу на строки
+            const lines = this.phrase.split('<br>');
+
             // Устанавливаем шрифт и цвет текста
-            // this.ctx.font = "30px Arial";
-            // this.ctx.fillStyle = "white";
+            this.ctx.font = "30px Arial";
+            this.ctx.fillStyle = "white";
 
-            // Рассчитываем размер текста
-            const textWidth = this.ctx.measureText(this.phrase).width;
-            const textHeight = 32; // Высота текста (размер шрифта)
+            // Начальная координата Y для первой строки
+            let lineY = this.canvas.height / 2 - (lines.length * 16) / 2;  // 16 — высота строки
 
-            // Рассчитываем начальные координаты текста
-            this.textX = (this.canvas.width - textWidth) / 2;
-            this.textY = (this.canvas.height + textHeight) / 2;
-
-            //     // Рисуем текст
-            //     this.drawText();
-            // },
-            // drawText() {
-            //     if (!this.ctx) return;
-            //     this.ctx.font = "30px Arial";
-            //     this.ctx.fillStyle = "white";
-            //     this.ctx.fillText(this.phrase, this.textX, this.textY);
+            // Рисуем текст строками
+            lines.forEach(line => {
+                const textWidth = this.ctx.measureText(line).width;
+                const textX = (this.canvas.width - textWidth) / 2;
+                this.ctx.fillText(line, textX, lineY);
+                lineY += 32; // Отступ для следующей строки
+            });
         },
         closeModal() {
             this.isModalOpen = false;
@@ -192,7 +219,7 @@ export default {
             // Ограничиваем координаты в пределах canvas
             const textWidth = this.ctx.measureText(this.phrase).width;
 
-            newX = Math.max(0, Math.min(this.canvas.width - textWidth, newX)); // Ограничиваем по ширине текста
+            // newX = Math.max(0, Math.min(this.canvas.width - textWidth, newX)); // Ограничиваем по ширине текста
             newY = Math.max(0, Math.min(this.canvas.height - 32, newY)); // Ограничиваем по высоте
 
             this.textX = newX;
