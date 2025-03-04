@@ -41,10 +41,13 @@
         <div v-if="isModalOpen" class="modal">
             <div class="modal__content">
                 <span class="close" @click="closeModal">&times;</span>
-
-                <canvas v-if="isModalOpen" ref="canvas" class="modal__canvas" @mousedown="startDragging"
-                    @mousemove="dragText" @mouseup="stopDragging" @mouseleave="stopDragging">
-                </canvas>
+                <canvas ref="canvas" class="modal__canvas"></canvas>
+                <!-- Редактируемый текст -->
+                <div v-if="isModalOpen" ref="editableText" class="editable-text"
+                    :style="{ left: textX + 'px', top: textY + 'px' }" contenteditable="true" @mousedown="startDragging"
+                    @input="updateText">
+                    {{ phrase }}
+                </div>
             </div>
         </div>
     </div>
@@ -61,7 +64,6 @@ export default {
             images: [
                 { src: "hoodie.png", bigSrc: "hoodie_big.png" },
                 { src: "sweetshirt.png", bigSrc: "sweetshirt_big.png" },
-                { src: "hoodie.png", bigSrc: "hoodie_big.png" },
                 { src: "longsleeve.png", bigSrc: "longsleeve_big.png" },
                 { src: "t_shirt_basic.png", bigSrc: "t_shirt_basic_big.png" },
                 { src: "t_shirt_true_over.png", bigSrc: "t_shirt_true_over_big.png" }
@@ -75,7 +77,7 @@ export default {
             ctx: null,
             dragOffsetX: 0,
             dragOffsetY: 0,
-            backgroundImage: null // Добавляем переменную для хранения фонового изображения
+            backgroundImage: null
         };
     },
     methods: {
@@ -105,101 +107,39 @@ export default {
         loadImageAndDraw() {
             const img = new Image();
             img.onload = () => {
-                // Устанавливаем размер canvas равным размеру изображения
-                this.canvas.width = img.width;
-                this.canvas.height = img.height;
-
-                // Сохраняем изображение как фон
+                this.canvas.width = img.width * 0.5;
+                this.canvas.height = img.height * 0.5;
                 this.backgroundImage = img;
-
-                // Рисуем фон один раз
                 this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
-
-                // Рисуем текст
-                this.drawText();
             };
             img.src = this.selectedImage;
         },
         closeModal() {
             this.isModalOpen = false;
         },
-        drawText() {
-            if (!this.ctx) return;
-            this.ctx.font = "30px Arial";
-            this.ctx.fillStyle = "black";
-            this.ctx.fillText(this.phrase, this.textX, this.textY);
-        },
         startDragging(e) {
-        const rect = this.canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-
-        // Проверяем, находится ли курсор над текстом
-        if (this.isMouseOverText(mouseX, mouseY)) {
             this.isDragging = true;
-            this.dragOffsetX = mouseX - this.textX;
-            this.dragOffsetY = mouseY - this.textY;
-            console.log("Начали перетаскивание", this.textX, this.textY);
-        }
-    },
-    dragText(e) {
-        if (this.isDragging) {
             const rect = this.canvas.getBoundingClientRect();
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-
-            // Очищаем только область текста
-            this.clearTextArea();
-
-            // Обновляем координаты текста
-            this.textX = mouseX - this.dragOffsetX;
-            this.textY = mouseY - this.dragOffsetY;
-
-            // Рисуем текст на новом месте
-            this.drawText();
-            console.log("Перетаскиваем текст", this.textX, this.textY);
+            this.dragOffsetX = e.clientX - this.textX;
+            this.dragOffsetY = e.clientY - this.textY;
+            document.addEventListener("mousemove", this.dragText);
+            document.addEventListener("mouseup", this.stopDragging);
+        },
+        dragText(e) {
+            if (this.isDragging) {
+                const rect = this.canvas.getBoundingClientRect();
+                this.textX = e.clientX - rect.left - this.dragOffsetX;
+                this.textY = e.clientY - rect.top - this.dragOffsetY;
+            }
+        },
+        stopDragging() {
+            this.isDragging = false;
+            document.removeEventListener("mousemove", this.dragText);
+            document.removeEventListener("mouseup", this.stopDragging);
+        },
+        updateText(e) {
+            this.phrase = e.target.innerText;
         }
-    },
-    stopDragging() {
-        this.isDragging = false;
-        console.log("Остановили перетаскивание");
-    },
-    isMouseOverText(mouseX, mouseY) {
-        if (!this.ctx || !this.phrase) return false;
-
-        const textWidth = this.ctx.measureText(this.phrase).width;
-        const textHeight = 30; // высота шрифта
-
-        // Проверяем, находится ли курсор в пределах текста
-        const isOverText =
-            mouseX >= this.textX &&
-            mouseX <= this.textX + textWidth &&
-            mouseY >= this.textY - textHeight &&
-            mouseY <= this.textY;
-
-        console.log("Курсор над текстом?", isOverText, mouseX, mouseY, this.textX, this.textY);
-        return isOverText;
-    },
-    clearTextArea() {
-        if (!this.ctx || !this.phrase) return;
-
-        const textWidth = this.ctx.measureText(this.phrase).width;
-        const textHeight = 30; // высота шрифта
-
-        // Очищаем только область текста
-        this.ctx.clearRect(this.textX, this.textY - textHeight, textWidth, textHeight);
-
-        // Восстанавливаем фон в области текста
-        if (this.backgroundImage) {
-            this.ctx.drawImage(
-                this.backgroundImage,
-                this.textX, this.textY - textHeight,
-                textWidth, textHeight,
-                this.textX, this.textY - textHeight,
-                textWidth, textHeight
-            );
-        }
-    }
     },
     mounted() {
         this.$nextTick(() => {
@@ -224,7 +164,7 @@ export default {
 
 .modal__content {
     position: relative;
-    background-color: #ffffff;
+    background-color: rgb(144, 144, 231);
     padding: 20px;
     border-radius: 10px;
     border: 1px solid black;
@@ -248,5 +188,17 @@ export default {
     justify-content: center;
     align-items: center;
     z-index: 1000;
+}
+
+.editable-text {
+    position: absolute;
+    font-size: 30px;
+    font-family: Arial, sans-serif;
+    color: white;
+    cursor: move;
+    user-select: none;
+    background-color: transparent;
+    border: none;
+    outline: none;
 }
 </style>
