@@ -1,6 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
-import TextOnImageView from "../views/TextOnImageView.vue";
+import TextOnImageView from "../views/TextOnImageView.vue"
+import GoodsView from "../views/GoodsView.vue"
+import CreateProductView from "../views/CreateProductView.vue"
+
+
 
 
 const router = createRouter({
@@ -24,6 +28,16 @@ const router = createRouter({
       name: 'images',
       component: TextOnImageView,
     },
+    {
+      path: '/dev',
+      name: 'goods',
+      component: GoodsView
+    },
+    {
+      path: '/create_product',
+      name: 'productCreation',
+      component: CreateProductView
+    }
   ],
 })
 
