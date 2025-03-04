@@ -46,8 +46,8 @@
                     @mousemove="dragText" @mouseup="stopDragging" @mouseleave="stopDragging">
                 </canvas>
             </div>
-            </div>
-            </div>
+        </div>
+    </div>
 </template>
 
 <script>
@@ -74,7 +74,8 @@ export default {
             canvas: null,
             ctx: null,
             dragOffsetX: 0,
-            dragOffsetY: 0
+            dragOffsetY: 0,
+            backgroundImage: null // Добавляем переменную для хранения фонового изображения
         };
     },
     methods: {
@@ -104,9 +105,17 @@ export default {
         loadImageAndDraw() {
             const img = new Image();
             img.onload = () => {
+                // Устанавливаем размер canvas равным размеру изображения
                 this.canvas.width = img.width;
                 this.canvas.height = img.height;
+
+                // Сохраняем изображение как фон
+                this.backgroundImage = img;
+
+                // Рисуем фон один раз
                 this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
+
+                // Рисуем текст
                 this.drawText();
             };
             img.src = this.selectedImage;
@@ -121,49 +130,76 @@ export default {
             this.ctx.fillText(this.phrase, this.textX, this.textY);
         },
         startDragging(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        // Проверяем, находится ли курсор над текстом
+        if (this.isMouseOverText(mouseX, mouseY)) {
+            this.isDragging = true;
+            this.dragOffsetX = mouseX - this.textX;
+            this.dragOffsetY = mouseY - this.textY;
+            console.log("Начали перетаскивание", this.textX, this.textY);
+        }
+    },
+    dragText(e) {
+        if (this.isDragging) {
             const rect = this.canvas.getBoundingClientRect();
             const mouseX = e.clientX - rect.left;
             const mouseY = e.clientY - rect.top;
 
-            if (this.isMouseOverText(mouseX, mouseY)) {
-                this.isDragging = true;
-                this.dragOffsetX = mouseX - this.textX;
-                this.dragOffsetY = mouseY - this.textY;
-            }
-        },
-        dragText(e) {
-            if (this.isDragging) {
-                const rect = this.canvas.getBoundingClientRect();
-                const mouseX = e.clientX - rect.left;
-                const mouseY = e.clientY - rect.top;
+            // Очищаем только область текста
+            this.clearTextArea();
 
-                this.textX = mouseX - this.dragOffsetX;
-                this.textY = mouseY - this.dragOffsetY;
-                this.redrawCanvas();
-            }
-        },
-        stopDragging() {
-            this.isDragging = false;
-        },
-        isMouseOverText(mouseX, mouseY) {
-            const textWidth = this.ctx.measureText(this.phrase).width;
-            const textHeight = 30; // высота шрифта
-            return (
-                mouseX >= this.textX &&
-                mouseX <= this.textX + textWidth &&
-                mouseY >= this.textY - textHeight &&
-                mouseY <= this.textY
-            );
-        },
-        redrawCanvas() {
-            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            const img = new Image();
-            img.onload = () => {
-                this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
-                this.drawText();
-            };
-            img.src = this.selectedImage;
+            // Обновляем координаты текста
+            this.textX = mouseX - this.dragOffsetX;
+            this.textY = mouseY - this.dragOffsetY;
+
+            // Рисуем текст на новом месте
+            this.drawText();
+            console.log("Перетаскиваем текст", this.textX, this.textY);
         }
+    },
+    stopDragging() {
+        this.isDragging = false;
+        console.log("Остановили перетаскивание");
+    },
+    isMouseOverText(mouseX, mouseY) {
+        if (!this.ctx || !this.phrase) return false;
+
+        const textWidth = this.ctx.measureText(this.phrase).width;
+        const textHeight = 30; // высота шрифта
+
+        // Проверяем, находится ли курсор в пределах текста
+        const isOverText =
+            mouseX >= this.textX &&
+            mouseX <= this.textX + textWidth &&
+            mouseY >= this.textY - textHeight &&
+            mouseY <= this.textY;
+
+        console.log("Курсор над текстом?", isOverText, mouseX, mouseY, this.textX, this.textY);
+        return isOverText;
+    },
+    clearTextArea() {
+        if (!this.ctx || !this.phrase) return;
+
+        const textWidth = this.ctx.measureText(this.phrase).width;
+        const textHeight = 30; // высота шрифта
+
+        // Очищаем только область текста
+        this.ctx.clearRect(this.textX, this.textY - textHeight, textWidth, textHeight);
+
+        // Восстанавливаем фон в области текста
+        if (this.backgroundImage) {
+            this.ctx.drawImage(
+                this.backgroundImage,
+                this.textX, this.textY - textHeight,
+                textWidth, textHeight,
+                this.textX, this.textY - textHeight,
+                textWidth, textHeight
+            );
+        }
+    }
     },
     mounted() {
         this.$nextTick(() => {
