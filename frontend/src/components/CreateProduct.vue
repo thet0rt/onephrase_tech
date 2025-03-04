@@ -41,7 +41,7 @@
       <div v-if="isModalOpen" class="modal">
         <div class="modal__content">
           <span class="close" @click="closeModal">&times;</span>
-          <canvas ref="canvas" class="modal__canvas" @mousedown="startDrag" @mousemove="onDrag" @mouseup="stopDrag"></canvas>
+          <canvas ref="canvas" class="modal__canvas"></canvas>
         </div>
       </div>
     </div>
@@ -65,8 +65,8 @@
         ],
         isModalOpen: false,
         selectedImage: "",
-        textX: 50,
-        textY: 50,
+        textX: 100,
+        textY: 100,
         isDragging: false,
         canvas: null,
         ctx: null
@@ -99,36 +99,17 @@
         const img = new Image();
         img.src = this.selectedImage;
         img.onload = () => {
-          this.canvas.width = img.width / 2;
-          this.canvas.height = img.height / 2;
+          this.canvas.width = img.width;
+          this.canvas.height = img.height;
           this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
           this.drawText();
         };
       },
       drawText() {
         if (!this.ctx) return;
-        this.ctx.font = "20px Arial";
+        this.ctx.font = "30px Arial";
         this.ctx.fillStyle = "black";
         this.ctx.fillText(this.phrase, this.textX, this.textY);
-      },
-      startDrag(event) {
-        const rect = this.canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-        if (x >= this.textX && x <= this.textX + 100 && y >= this.textY - 20 && y <= this.textY) {
-          this.isDragging = true;
-        }
-      },
-      onDrag(event) {
-        if (!this.isDragging) return;
-        const rect = this.canvas.getBoundingClientRect();
-        this.textX = event.clientX - rect.left;
-        this.textY = event.clientY - rect.top;
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.drawCanvas();
-      },
-      stopDrag() {
-        this.isDragging = false;
       }
     }
   };
@@ -137,37 +118,33 @@
   <style scoped>
   @import '@/assets/styles.css';
   
+  .modal__content {
+    position: relative;
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;  /* Обрамление вокруг изображения */
+    border: 1px solid black;
+  }
+  
+  .modal__canvas {
+    display: block;
+    border: 2px solid #000000;  /* Белое обрамление */
+    max-width: 90%;  /* Чтобы картинка не выходила за пределы окна */
+    max-height: 90%;  /* Ограничиваем высоту */
+  }
+  
   .modal {
-    position: fixed;
+    position: fixed;  /* Фиксируем модальное окно */
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.6);
+    background-color: rgba(255, 255, 255, 0.5);  /* Прозрачный фон */
+    /* border: 10px solid black; */
     display: flex;
-    align-items: center;
     justify-content: center;
-  }
-  
-  .modal__content {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    position: relative;
-  }
-  
-  .modal__canvas {
-    width: 100%;
-    max-width: 500px;
-    cursor: grab;
-  }
-  
-  .close {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 24px;
-    cursor: pointer;
+    align-items: center;
+    z-index: 1000;  /* Чтобы окно было поверх других элементов */
   }
   </style>
   
