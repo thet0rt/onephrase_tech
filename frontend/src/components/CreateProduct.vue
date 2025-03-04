@@ -39,8 +39,9 @@
 
         <!-- Модальное окно -->
         <div v-if="isModalOpen" class="modal">
-            <div class="modal__content">
                 <span class="close" @click="closeModal">&times;</span>
+
+            <div class="modal__content">
                 <canvas ref="canvas" class="modal__canvas"></canvas>
                 <!-- Редактируемый текст -->
                 <div v-if="isModalOpen" ref="editableText" class="editable-text"
@@ -126,34 +127,34 @@ export default {
             if (!this.ctx || !this.phrase) return;
 
             // Устанавливаем шрифт и цвет текста
-            this.ctx.font = "30px Arial";
-            this.ctx.fillStyle = "white";
+            // this.ctx.font = "30px Arial";
+            // this.ctx.fillStyle = "white";
 
             // Рассчитываем размер текста
             const textWidth = this.ctx.measureText(this.phrase).width;
-            const textHeight = 30; // Высота текста (размер шрифта)
+            const textHeight = 32; // Высота текста (размер шрифта)
 
             // Рассчитываем начальные координаты текста
             this.textX = (this.canvas.width - textWidth) / 2;
             this.textY = (this.canvas.height + textHeight) / 2;
 
-            // Рисуем текст
-            // this.drawText();
-        },
+        //     // Рисуем текст
+        //     this.drawText();
+        // },
         // drawText() {
         //     if (!this.ctx) return;
         //     this.ctx.font = "30px Arial";
         //     this.ctx.fillStyle = "white";
         //     this.ctx.fillText(this.phrase, this.textX, this.textY);
-        // },
+        },
         closeModal() {
             this.isModalOpen = false;
         },
         startDragging(e) {
             this.isDragging = true;
-
             // Получаем координаты canvas относительно окна браузера
             const rect = this.canvas.getBoundingClientRect();
+
 
             // Рассчитываем смещение мыши относительно текста
             this.dragOffsetX = e.clientX - rect.left - this.textX;
@@ -164,23 +165,28 @@ export default {
             document.addEventListener("mouseup", this.stopDragging);
         },
         dragText(e) {
-            if (this.isDragging) {
-                const rect = this.canvas.getBoundingClientRect();
+            if (!this.isDragging || !this.canvas || !this.backgroundImage) return;
 
-                let newX = e.clientX - rect.left - this.dragOffsetX;
-                let newY = e.clientY - rect.top - this.dragOffsetY;
+            // Получаем координаты canvas относительно окна браузера
+            const rect = this.canvas.getBoundingClientRect();
 
-                // Ограничиваем координаты в пределах canvas
-                newX = Math.max(0, Math.min(this.canvas.width - 100, newX)); // 100 — примерная ширина текста
-                newY = Math.max(0, Math.min(this.canvas.height - 30, newY)); // 30 — примерная высота текста
+            // Получаем координаты мыши внутри canvas
+            let newX = e.clientX - rect.left - this.dragOffsetX;
+            let newY = e.clientY - rect.top - this.dragOffsetY;
 
-                this.textX = newX;
-                this.textY = newY;
+            // Ограничиваем координаты в пределах canvas
+            const textWidth = this.ctx.measureText(this.phrase).width;
 
-                console.log("textX:", this.textX, "textY:", this.textY);
-            }
+            newX = Math.max(0, Math.min(this.canvas.width - 100, newX)); // 100 — примерная ширина текста
+            // newX = Math.max(0, Math.min(this.canvas.width - 100, newX)); // 100 — примерная ширина текста
+
+            newY = Math.max(0, Math.min(this.canvas.height - 32, newY)); // 32 — примерная высота текста
+
+            this.textX = newX;
+            this.textY = newY;
+            console.log("textX:", this.textX, "textY:", this.textY);
+
         },
-
         stopDragging() {
             this.isDragging = false;
 
@@ -216,16 +222,19 @@ export default {
 .modal__content {
     position: relative;
     background-color: white;
-    padding: 20px;
-    border-radius: 10px;
+    /* padding: 20px; */
+    /* border-radius: 10px; */
     border: 1px solid black;
 }
 
 .modal__canvas {
     display: block;
-    border: 2px solid #000000;
-    max-width: 90%;
-    max-height: 90%;
+    border: 1px solid #000000;
+    /* max-width: 90%;
+    max-height: 90%; */
+    padding: 0;
+    margin: 0;
+
 }
 
 .modal {
@@ -252,7 +261,7 @@ export default {
     border: none;
     outline: none;
     position: absolute;
-    color: #FFF;
+    color: #dd1212;
     /* color */
     text-align: center;
     /* text-align */
@@ -275,4 +284,5 @@ export default {
     outline: none;
 
 }
+
 </style>
