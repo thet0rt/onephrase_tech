@@ -266,6 +266,14 @@ export default {
 
 <style scoped>
 @import '@/assets/styles.css';
+@font-face {
+  font-family: 'OnePhraseFont';
+  src: url('@/assets/fonts/AvantGardeC_regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+
 
 .modal__content {
     position: relative;
@@ -313,7 +321,7 @@ export default {
     /* color */
     text-align: center;
     /* text-align */
-    font-family: "Avant Garde", Avantgarde, "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
+    font-family: "OnePhraseFont", "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
     /* font-family */
     font-size: 32px;
     /* font-size */
