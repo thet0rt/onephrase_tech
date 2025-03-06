@@ -15,7 +15,7 @@ log = logging.getLogger(os.getenv('APP_NAME'))
 
 from PIL import Image, ImageDraw, ImageFont
 import os
-from schemas import ProductsSchema
+from .schemas import ImageRequestSchema
 
 
 # Директории
@@ -26,7 +26,7 @@ os.makedirs(PROCESSED_DIR, exist_ok=True)
 
 
 @products_bp.route("/generate", methods=["POST"])
-@products_bp.arguments(ProductsSchema)
+@products_bp.arguments(ImageRequestSchema)
 def generate_images(data):
     results = []
 
@@ -37,8 +37,11 @@ def generate_images(data):
         font_size = item["fontSize"]
 
         # Проверяем, существует ли файл
-        input_path = os.path.join("images", product)  # Путь к исходному изображению
-        output_path = os.path.join(PROCESSED_DIR, f"generated_{product}")  # Сохраненный файл
+        input_path = f'products/initial_images/{product}/{product}.png'
+        
+        # input_path = os.path.join("initial_images", product, f'{product}.png')  # Путь к исходному изображению
+        output_path = os.path.join(PROCESSED_DIR, f"generated_{product}.png")  # Сохраненный файл
+        print(input_path)
 
         if not os.path.exists(input_path):
             return jsonify({"error": f"Файл {product} не найден"}), 404
@@ -49,7 +52,7 @@ def generate_images(data):
 
         # Загружаем шрифт (по умолчанию встроенный)
         try:
-            font = ImageFont.truetype("./AvantGardeC_regular.otf", font_size)  # Замените на ваш шрифт
+            font = ImageFont.truetype("products/AvantGardeC_regular.otf", font_size)  # Замените на ваш шрифт
         except IOError as exc:
             log.error(exc)
             font = ImageFont.load_default()
