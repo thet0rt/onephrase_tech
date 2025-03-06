@@ -13,10 +13,63 @@ from . import products_bp
 
 log = logging.getLogger(os.getenv('APP_NAME'))
 
+from PIL import Image, ImageDraw, ImageFont
+import os
+from schemas import ProductsSchema
+
+
+# Директории
+STATIC_DIR = "static"
+PROCESSED_DIR = "./processed_images"
+os.makedirs(PROCESSED_DIR, exist_ok=True)
+
+
+
+@products_bp.route("/generate", methods=["POST"])
+@products_bp.arguments(ProductsSchema)
+def generate_images(data):
+    results = []
+
+    for item in data["items"]:
+        product = item["product"].split('.')[0]
+        text = item["text"]
+        x, y = item["coordinates"]["x"], item["coordinates"]["y"]
+        font_size = item["fontSize"]
+
+        # Проверяем, существует ли файл
+        input_path = os.path.join("images", product)  # Путь к исходному изображению
+        output_path = os.path.join(PROCESSED_DIR, f"generated_{product}")  # Сохраненный файл
+
+        if not os.path.exists(input_path):
+            return jsonify({"error": f"Файл {product} не найден"}), 404
+
+        # Открываем изображение
+        image = Image.open(input_path)
+        draw = ImageDraw.Draw(image)
+
+        # Загружаем шрифт (по умолчанию встроенный)
+        try:
+            font = ImageFont.truetype("./AvantGardeC_regular.otf", font_size)  # Замените на ваш шрифт
+        except IOError as exc:
+            log.error(exc)
+            font = ImageFont.load_default()
+
+        # Добавляем текст
+        draw.text((x, y), text, fill="white", font=font)
+
+        # Сохраняем изображение
+        image.save(output_path)
+        results.append({"product": product, "output": output_path})
+
+    return jsonify({"message": "Images generated", "results": results})
+
+# # Раздача файлов (для тестирования)
+# @products_bp.route("/output/<filename>")
+# def get_generated_image(filename):
+#     return send_from_directory(UPLOAD_FOLDER, filename)
 
 
 @products_bp.get("/healthcheck")
 def health_check():
     log.info("Healthcheck. Everything is fine. Have a good day!")
     return Response("Healthcheck. Everything is fine. Have a good day!", status=200)
-
