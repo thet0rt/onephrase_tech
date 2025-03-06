@@ -20,6 +20,7 @@ from .schemas import ImageRequestSchema
 
 # Директории
 STATIC_DIR = "static"
+UNPROCESSED_DIR = 'products/initial_images'
 PROCESSED_DIR = "./processed_images"
 os.makedirs(PROCESSED_DIR, exist_ok=True)
 
@@ -36,33 +37,40 @@ def generate_images(data):
         x, y = item["coordinates"]["x"], item["coordinates"]["y"]
         font_size = item["fontSize"]
 
-        # Проверяем, существует ли файл
-        input_path = f'products/initial_images/{product}/{product}.png'
-        
-        # input_path = os.path.join("initial_images", product, f'{product}.png')  # Путь к исходному изображению
-        output_path = os.path.join(PROCESSED_DIR, f"generated_{product}.png")  # Сохраненный файл
-        print(input_path)
+        folder_path = f'{UNPROCESSED_DIR}/{product}'
+        objects = os.listdir(folder_path)
+        files = [obj for obj in objects if os.path.isfile(os.path.join(folder_path, obj))]
 
-        if not os.path.exists(input_path):
-            return jsonify({"error": f"Файл {product} не найден"}), 404
+        for file in files:
+            print(file)
+            input_path = f'products/initial_images/{product}/{file}'
 
-        # Открываем изображение
-        image = Image.open(input_path)
-        draw = ImageDraw.Draw(image)
+            color = file.split('.')[0]
+            
+            # input_path = os.path.join("initial_images", product, f'{product}.png')  # Путь к исходному изображению
+            output_path = os.path.join(PROCESSED_DIR, f"generated_{product}_{color}.png")  # Сохраненный файл
+            print(input_path)
 
-        # Загружаем шрифт (по умолчанию встроенный)
-        try:
-            font = ImageFont.truetype("products/AvantGardeC_regular.otf", font_size)  # Замените на ваш шрифт
-        except IOError as exc:
-            log.error(exc)
-            font = ImageFont.load_default()
+            if not os.path.exists(input_path):
+                return jsonify({"error": f"Файл {product} не найден"}), 404
 
-        # Добавляем текст
-        draw.text((x, y), text, fill="white", font=font)
+            # Открываем изображение
+            image = Image.open(input_path)
+            draw = ImageDraw.Draw(image)
 
-        # Сохраняем изображение
-        image.save(output_path)
-        results.append({"product": product, "output": output_path})
+            # Загружаем шрифт (по умолчанию встроенный)
+            try:
+                font = ImageFont.truetype("products/AvantGardeC_regular.otf", font_size)  # Замените на ваш шрифт
+            except IOError as exc:
+                log.error(exc)
+                font = ImageFont.load_default()
+
+            # Добавляем текст
+            draw.text((x, y), text, fill="white", font=font)
+
+            # Сохраняем изображение
+            image.save(output_path)
+            results.append({"product": product, "output": output_path})
 
     return jsonify({"message": "Images generated", "results": results})
 
