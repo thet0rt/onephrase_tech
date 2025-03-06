@@ -242,3 +242,4 @@ fabric.properties
 /run.sh
 /run_dev.sh
 /.idea/vcs.xml
+.vscode/settings.json

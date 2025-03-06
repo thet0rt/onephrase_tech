@@ -13,6 +13,7 @@ from flask_cors import CORS
 
 from models import User
 from money import money_bp
+from products import products_bp
 
 app = Flask(__name__)
 
@@ -49,6 +50,7 @@ api.register_blueprint(legacy_bp, url_prefix='/')
 api.register_blueprint(auth_bp, url_prefix='/auth')
 api.register_blueprint(admin_bp, url_prefix='/admin')
 api.register_blueprint(money_bp, url_prefix='/money')
+api.register_blueprint(products_bp, url_prefix='/products')
 
 # Инициируем логин-менеджер
 login_manager = LoginManager()
