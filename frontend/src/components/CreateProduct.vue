@@ -78,7 +78,7 @@ export default {
                 { src: "t_shirt_true_over.png", bigSrc: "t_shirt_true_over_big.png" }
             ],
             imagesTextCoordinates: [
-                { x: 180, y: 365 },
+                { x: 188, y: 409 },
                 { x: 180, y: 365 },
                 { x: 185, y: 300 },
                 { x: 180, y: 365 },
@@ -102,14 +102,16 @@ export default {
     methods: {
         generateFile() {
             // Создаем словарь с данными для каждого продукта
-            const productsData = this.images.map((image, index) => ({
+            const productsDataList = this.images.map((image, index) => ({
                 product: image.src, // Название продукта (можно заменить на что-то более информативное)
                 coordinates: this.imagesTextCoordinates[index], // Координаты текста
-                fontSize: this.imagesFontSizes[index] // Размер шрифта
+                fontSize: this.imagesFontSizes[index], // Размер шрифта,
+                text: this.phrase
             }));
 
             // Выводим словарь в консоль (для отладки)
-            console.log("Сгенерированные данные:", productsData);
+            console.log("Сгенерированные данные:", productsDataList);
+            const productsData = {items: productsDataList}
 
             // Отображаем словарь в модальном окне
             this.showGeneratedData(productsData);
