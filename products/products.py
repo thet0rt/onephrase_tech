@@ -64,8 +64,8 @@ class Products:
     
     def get_category(self, category: str) -> str:
         if category:
-            category = category.replace('@category_1', f'{self.product_data['category_1']};')
-            category = category.replace('@category_2', f'{self.product_data['category_2']};')
+            category = category.replace('@category_1', f'{self.product_data["category_1"]};')
+            category = category.replace('@category_2', f'{self.product_data["category_2"]};')
         return category
     
     def get_title(self, title):
@@ -81,9 +81,6 @@ class Products:
             row[self.column_mapping['category']] = self.get_category(row[self.column_mapping['category']])
             row[self.column_mapping['title']] = self.get_title(row[self.column_mapping['title']])
             
-
-
-
 
     def get_template(self):
         products_template = self.worksheet.get("A1:X163")[1:]

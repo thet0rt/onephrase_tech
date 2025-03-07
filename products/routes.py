@@ -44,6 +44,7 @@ def generate_images(data):
         folder_path = f'{UNPROCESSED_DIR}/{product}'
         objects = os.listdir(folder_path)
         files = [obj for obj in objects if os.path.isfile(os.path.join(folder_path, obj))]
+        links = {}
 
         for file in files:
             print(file)
@@ -73,9 +74,14 @@ def generate_images(data):
 
             # Сохраняем изображение
             image.save(output_path)
+            link_name = f'{product}_{color}'
+            link = f'{os.getenv("SERVICE_URL")}/products/download_img/{filename}'  # todo create endpoint for downloading this
+            print(link)
+            print(link_name)
+            links[link_name] = link
             results.append({"product": product, "output": output_path})
-
-    return jsonify({"message": "Images generated", "results": results})
+    print(links)
+    return jsonify({"message": "Images generated", "results": links})
 
 # # Раздача файлов (для тестирования)
 # @products_bp.route("/output/<filename>")

@@ -74,8 +74,8 @@ export default {
                 { src: "hoodie.png", bigSrc: "hoodie_big.png" },
                 { src: "sweetshirt.png", bigSrc: "sweetshirt_big.png" },
                 { src: "longsleeve.png", bigSrc: "longsleeve_big.png" },
-                { src: "t_shirt_basic.png", bigSrc: "t_shirt_basic_big.png" },
-                { src: "t_shirt_true_over.png", bigSrc: "t_shirt_true_over_big.png" }
+                { src: "tshirt-basic.png", bigSrc: "tshirt-basic_big.png" },
+                { src: "tshirt-true_over.png", bigSrc: "tshirt-true_over_big.png" }
             ],
             imagesTextCoordinates: [
                 { x: 188, y: 409 },
