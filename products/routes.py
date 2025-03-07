@@ -34,6 +34,7 @@ os.makedirs(PROCESSED_DIR, exist_ok=True)
 @products_bp.arguments(ImageRequestSchema)
 def generate_images(data):
     results = []
+    links = {}
 
     for item in data["items"]:
         product = item["product"].split('.')[0]
@@ -44,7 +45,6 @@ def generate_images(data):
         folder_path = f'{UNPROCESSED_DIR}/{product}'
         objects = os.listdir(folder_path)
         files = [obj for obj in objects if os.path.isfile(os.path.join(folder_path, obj))]
-        links = {}
 
         for file in files:
             print(file)

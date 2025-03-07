@@ -68,9 +68,16 @@ class Products:
             category = category.replace('@category_2', f'{self.product_data["category_2"]};')
         return category
     
-    def get_title(self, title):
+    def get_title(self, title: str):
         title = title.replace('@new_phrase', self.product_data['phrase_art'])
         return title
+    
+    def get_link(self, photo: str):
+        link = self.product_data['links'].get(photo)
+        if not link:
+            log.warning(f'No link found for product: {photo}')
+        return link
+                    
 
 
     def fill_xlsx_template(self, template: List[list]):
@@ -80,10 +87,14 @@ class Products:
             row[self.column_mapping['sku']] = self.product_data['phrase_art']
             row[self.column_mapping['category']] = self.get_category(row[self.column_mapping['category']])
             row[self.column_mapping['title']] = self.get_title(row[self.column_mapping['title']])
-            
+            row[self.column_mapping['photo']] = self.get_link(row[self.column_mapping['photo']])
+            row[self.column_mapping['parent_uid']] = self.get_correct_uuid(row[self.column_mapping['parent_uid']])
+            row[self.column_mapping['categories']] = self.get_category(row[self.column_mapping['categories']])
+
 
     def get_template(self):
         products_template = self.worksheet.get("A1:X163")[1:]
+        self.fill_xlsx_template(products_template)
         # print(products_template)
         # Создаём новую Excel-книгу
         wb = Workbook()
