@@ -7,6 +7,9 @@ from flask import render_template
 from flask import request, url_for, flash, redirect, jsonify
 from flask import send_file, send_from_directory
 from flask_smorest import abort
+from werkzeug.utils import secure_filename
+from transliterate import translit
+
 
 import logging
 from . import products_bp
@@ -46,21 +49,20 @@ def generate_images(data):
             input_path = f'products/initial_images/{product}/{file}'
 
             color = file.split('.')[0]
-            
-            # input_path = os.path.join("initial_images", product, f'{product}.png')  # Путь к исходному изображению
-            output_path = os.path.join(PROCESSED_DIR, f"generated_{product}_{color}.png")  # Сохраненный файл
+            phrase = translit(text, "ru", True)
+            filename = f"{product}_{color}_{phrase}_{uuid4()}.png"
+            filename = secure_filename(filename)
+            output_path = os.path.join(PROCESSED_DIR, filename)
             print(input_path)
 
             if not os.path.exists(input_path):
                 return jsonify({"error": f"Файл {product} не найден"}), 404
-
-            # Открываем изображение
+            
             image = Image.open(input_path)
             draw = ImageDraw.Draw(image)
 
-            # Загружаем шрифт (по умолчанию встроенный)
             try:
-                font = ImageFont.truetype("products/AvantGardeC_regular.otf", font_size)  # Замените на ваш шрифт
+                font = ImageFont.truetype("products/assets/AvantGardeC_regular.otf", font_size)
             except IOError as exc:
                 log.error(exc)
                 font = ImageFont.load_default()

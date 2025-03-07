@@ -110,8 +110,9 @@ export default {
             }));
 
             // Выводим словарь в консоль (для отладки)
-            console.log("Сгенерированные данные:", productsDataList);
             const productsData = {items: productsDataList}
+            console.log("Сгенерированные данные:", productsData);
+
 
             // Отображаем словарь в модальном окне
             this.showGeneratedData(productsData);
