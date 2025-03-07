@@ -26,7 +26,7 @@ class Products:
 
     column_mapping = {
         'tilda_uid': 0,
-        'sku': 1,  # phrase
+        'sku': 1,  # design_number
         'category': 2,
         'title': 3,
         'description': 4,  # useless
@@ -91,7 +91,7 @@ class Products:
         parent_uuids = {}
         for row in template:
             row[self.column_mapping['tilda_uid']] = self.get_correct_uuid(row[self.column_mapping['tilda_uid']])
-            row[self.column_mapping['sku']] = self.product_data['phrase_art']
+            row[self.column_mapping['sku']] = self.product_data['design_number']
             row[self.column_mapping['category']] = self.get_category(row[self.column_mapping['category']])
             row[self.column_mapping['title']] = self.get_title(row[self.column_mapping['title']])
             row[self.column_mapping['photo']] = self.get_link(row[self.column_mapping['photo']])
@@ -171,5 +171,6 @@ def generate_images(data) -> ProductData:
         phrase_art=text,
         category_1=data['category_1'],
         category_2=data['category_2'],
-        links=links
+        links=links,
+        design_number=data['design_number']
     )

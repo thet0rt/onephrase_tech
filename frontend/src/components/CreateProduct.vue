@@ -106,7 +106,10 @@ export default {
                 product: image.src, // Название продукта (можно заменить на что-то более информативное)
                 coordinates: this.imagesTextCoordinates[index], // Координаты текста
                 fontSize: this.imagesFontSizes[index], // Размер шрифта,
-                text: this.phrase
+                text: this.phrase,
+                category_1: this.categories[0],
+                category_2: this.categories[1],
+                design_number: this.designNumber
             }));
 
             // Выводим словарь в консоль (для отладки)
