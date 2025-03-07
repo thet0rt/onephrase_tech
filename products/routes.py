@@ -9,6 +9,7 @@ from flask import send_file, send_from_directory
 from flask_smorest import abort
 from werkzeug.utils import secure_filename
 from transliterate import translit
+from .products import Products
 
 
 import logging
@@ -86,3 +87,9 @@ def generate_images(data):
 def health_check():
     log.info("Healthcheck. Everything is fine. Have a good day!")
     return Response("Healthcheck. Everything is fine. Have a good day!", status=200)
+
+@products_bp.route("/test", methods=["GET"])
+def test():
+    config = Products()
+    template = config.get_template()
+    return Response()
