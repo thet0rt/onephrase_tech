@@ -2,6 +2,7 @@ import json
 import os
 from typing import List
 from uuid import UUID, uuid4
+import celery
 import gspread
 from gspread import Spreadsheet
 
@@ -18,7 +19,7 @@ log = logging.getLogger(os.getenv('APP_NAME'))
 
 STATIC_DIR = "static"
 UNPROCESSED_DIR = 'products/initial_images'
-PROCESSED_DIR = "./processed_images"
+PROCESSED_DIR = "products/processed_images"
 os.makedirs(PROCESSED_DIR, exist_ok=True)
 
 
@@ -99,28 +100,18 @@ class Products:
             row[self.column_mapping['categories']] = self.get_category(row[self.column_mapping['categories']])
 
 
-    def get_template(self):
+    def generate_xlsx(self):
         products_template = self.worksheet.get("A1:X163")[1:]
         self.fill_xlsx_template(products_template)
-        # print(products_template)
-        # Создаём новую Excel-книгу
         wb = Workbook()
         ws = wb.active
         ws.title = "Таблица"
-
-        # Записываем данные в Excel
         for row in products_template:
             print(row)
             ws.append(row)
-
-        #todo изменить значения некоторых ячеек в каждом ряду.
-
-        # Сохраняем в файл
         wb.save("table.xlsx")
-
-        print("Данные сохранены в table.xlsx")
-        # self.worksheet.update([response_list], f"D{i}")
-
+        log.info("Данные сохранены в table.xlsx")
+    
 
 
 def generate_images(data) -> ProductData:
@@ -174,3 +165,12 @@ def generate_images(data) -> ProductData:
         links=links,
         design_number=data['design_number']
     )
+
+
+@celery.task()
+def generate_product_xlsx(data):
+    product_data = generate_images(data)
+    product = Products(product_data)
+    product.generate_xlsx(product_data)
+    log.info('Products file generated sucessfully')
+    return 200, "Products file generated sucessfully"
