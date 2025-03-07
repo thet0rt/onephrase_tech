@@ -7,12 +7,19 @@ from gspread import Spreadsheet
 
 import logging
 from openpyxl import Workbook
+from PIL import Image, ImageDraw, ImageFont
+from werkzeug.utils import secure_filename
+from transliterate import translit
+
 
 from products.types import ProductData
 
-
 log = logging.getLogger(os.getenv('APP_NAME'))
 
+STATIC_DIR = "static"
+UNPROCESSED_DIR = 'products/initial_images'
+PROCESSED_DIR = "./processed_images"
+os.makedirs(PROCESSED_DIR, exist_ok=True)
 
 
 class Products:
@@ -113,3 +120,56 @@ class Products:
 
         print("Данные сохранены в table.xlsx")
         # self.worksheet.update([response_list], f"D{i}")
+
+
+
+def generate_images(data) -> ProductData:
+    results = []
+    links = {}
+    product_data: ProductData = {}
+    for item in data["items"]:
+        product = item["product"].split('.')[0]
+        text = item["text"]
+        x, y = item["coordinates"]["x"], item["coordinates"]["y"]
+        font_size = item["fontSize"]
+
+        folder_path = f'{UNPROCESSED_DIR}/{product}'
+        objects = os.listdir(folder_path)
+        files = [obj for obj in objects if os.path.isfile(os.path.join(folder_path, obj))]
+
+        for file in files:
+            input_path = f'products/initial_images/{product}/{file}'
+
+            color = file.split('.')[0]
+            phrase = translit(text, "ru", True)
+            filename = f"{product}_{color}_{phrase}_{uuid4()}.png"
+            filename = secure_filename(filename)
+            output_path = os.path.join(PROCESSED_DIR, filename)
+
+            if not os.path.exists(input_path):
+                log.error(f"Файл {product} не найден")
+            
+            image = Image.open(input_path)
+            draw = ImageDraw.Draw(image)
+
+            try:
+                font = ImageFont.truetype("products/assets/AvantGardeC_regular.otf", font_size)
+            except IOError as exc:
+                log.error(exc)
+                font = ImageFont.load_default()
+
+            # Добавляем текст
+            draw.text((x, y), text, fill="white", font=font)
+
+            # Сохраняем изображение
+            image.save(output_path)
+            link_name = f'{product}_{color}'
+            link = f'{os.getenv("SERVICE_URL")}/products/download_img/{filename}'  # todo create endpoint for downloading this
+            links[link_name] = link
+            results.append({"product": product, "output": output_path})
+    product_data = dict(
+        phrase_art=text,
+        category_1=data['category_1'],
+        category_2=data['category_2'],
+        links=links
+    )
