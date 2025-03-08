@@ -243,3 +243,4 @@ fabric.properties
 /run_dev.sh
 /.idea/vcs.xml
 .vscode/settings.json
+.DS_Store

@@ -7,7 +7,9 @@ services:
     env_file:
       - ./.env
     volumes:
-      - db:/data/postgres  # todo maybe add ports
+      - db:/data/postgres 
+    ports:
+      - "5432:5432"
 
   redis:
     image: redis:alpine
@@ -38,43 +40,6 @@ services:
       - ./xlsx_files:/app/xlsx_files
       - ./regru_task:/app/regru_task
 
-  # elasticsearch:
-  #   image: elasticsearch:8.10.2
-  #   container_name: elasticsearch
-  #   environment:
-  #     - discovery.type=single-node
-  #     - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-  #     - xpack.security.enabled=false
-  #     - ES_JAVA_OPTS=-Xms2g -Xmx2g
-  #   ports:
-  #     - "9200:9200"
-  #   volumes:
-  #     - es_data:/usr/share/elasticsearch/data
-  #   mem_limit: 4g
-
-  # filebeat:
-  #   image: dockerhub.timeweb.cloud/elastic/filebeat:8.10.2
-  #   container_name: filebeat
-  #   volumes:
-  #     - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-  #     - ./log/app.log:/usr/share/app/app.log:ro # Монтируем ваш лог-файл
-  #   depends_on:
-  #     - elasticsearch
-  #   env_file:
-  #     - ./.env
-
-  # kibana:
-  #   image: kibana:8.10.2
-  #   container_name: kibana
-  #   environment:
-  #     - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-  #     - ELASTICSEARCH_USERNAME=${KIBANA_USER}
-  #     - ELASTICSEARCH_PASSWORD=${KIBANA_PASSWORD}
-  #   ports:
-  #     - "5601:5601"
-  #   depends_on:
-  #     - elasticsearch
-
   frontend:
     container_name: vue_app
     build: ./frontend
@@ -91,5 +56,3 @@ services:
 volumes:
   redis_data:
   db:
-  # es_data:
-  #   driver: local
