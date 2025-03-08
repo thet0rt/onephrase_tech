@@ -1,27 +1,31 @@
 <template>
     <div>
-        <nav class="navbar">
-            <h1 class="logo__text">Onephrase.tech</h1>
-            <router-link to="/files" class="nav-link">Файлы</router-link>
-        </nav>
-        <div class="container">
-            <h2>Список файлов</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Название файла</th>
-                        <th>Действие</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="file in files" :key="file">
-                        <td>{{ file }}</td>
-                        <td>
-                            <button @click="downloadFile(file)">Скачать</button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+
+        <div class="wrapper">
+            <nav class="navbar">
+                    <router-link to="/create_product" class="logo__text">Onephrase.tech</router-link>
+                    <router-link to="/files" class="nav-link">Файлы</router-link>
+                </nav>
+            <div class="container">
+ 
+                <h2>Список файлов</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Название файла</th>
+                            <th>Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="file in files" :key="file">
+                            <td>{{ file }}</td>
+                            <td>
+                                <button @click="downloadFile(file)">Скачать</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </template>
@@ -59,7 +63,8 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px;
+    width: 100%;
+    padding: 10px 20px;
     background-color: #333;
     color: white;
 }
@@ -70,12 +75,24 @@ export default {
     margin-right: 20px;
 }
 
+.wrapper {
+    width: 1000px;
+    display: flex;
+    justify-content: center;
+    /* align-items: center; */
+    flex-direction: column;
+}
+
 .container {
     max-width: 600px;
     margin: 20px auto;
     padding: 20px;
     background: #f9f9f9;
     border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
 }
 
 table {
