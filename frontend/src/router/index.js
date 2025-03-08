@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import TextOnImageView from "../views/TextOnImageView.vue"
 import GoodsView from "../views/GoodsView.vue"
 import CreateProductView from "../views/CreateProductView.vue"
+import DownloadFilesView from "../views/DownloadFilesView.vue"
 
 
 
@@ -37,6 +38,11 @@ const router = createRouter({
       path: '/create_product',
       name: 'productCreation',
       component: CreateProductView
+    },
+    {
+      path: '/files',
+      name: 'downloadFiles',
+      component: DownloadFilesView
     }
   ],
 })
