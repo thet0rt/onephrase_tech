@@ -65,6 +65,6 @@ def download_xlsx(xlsx_filename):
 @products_bp.route("/xlsx_files", methods=["GET"])
 def get_xlsx_list():
     xlsx_files_path = Path(XLSX_FILES_DIR)
-    files = [f for f in xlsx_files_path.iterdir() if f.is_file()]
+    files = [f for f in xlsx_files_path.iterdir() if f.is_file() and f.name.endswith('xlsx')]
     files_sorted = sorted(files, key=lambda f: f.stat().st_ctime, reverse=True)
     return jsonify({"files": [file.name for file in files_sorted]})
