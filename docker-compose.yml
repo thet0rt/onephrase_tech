@@ -41,6 +41,9 @@ services:
       - ./media_compressed:/app/media_compressed
       - ./xlsx_files:/app/xlsx_files
       - ./regru_task:/app/regru_task
+      - ./products/initial_images:/app/products/initial_images
+      - ./products/generated_xlsx:/app/products/generated_xlsx
+      - ./products/processed_images:/app/products/processed_images
 
   frontend:
     container_name: vue_app
