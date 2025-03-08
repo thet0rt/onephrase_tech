@@ -1,47 +1,44 @@
-import datetime
+from datetime import datetime as dt
 import json
+import logging
 import os
 from typing import List
 from uuid import UUID, uuid4
-from celery_settings import celery
+
 import gspread
 from gspread import Spreadsheet
-
-import logging
 from openpyxl import Workbook
 from PIL import Image, ImageDraw, ImageFont
-from werkzeug.utils import secure_filename
 from transliterate import translit
+from werkzeug.utils import secure_filename
 
-
+from celery_settings import celery
 from products.const import PROCESSED_DIR, UNPROCESSED_DIR, XLSX_FILES_DIR
 from products.types import ProductData
 
-log = logging.getLogger(os.getenv('APP_NAME'))
+log = logging.getLogger(os.getenv("APP_NAME"))
 os.makedirs(PROCESSED_DIR, exist_ok=True)
 os.makedirs(XLSX_FILES_DIR, exist_ok=True)
-
 
 
 class Products:
 
     column_mapping = {
-        'tilda_uid': 0,
-        'sku': 1,  # design_number
-        'category': 2,
-        'title': 3,
-        'description': 4,  # useless
-        'text': 5,  # useless
-        'photo': 6,  # link
-        'price': 7,  # useless
-        'quantity': 8,  # useless
-        'price_old': 9,  # useless
-        'editions': 10,  # useless
-        'external_id': 11,  # useless
-        'parent_uid': 12,
-        'categories': 13,
+        "tilda_uid": 0,
+        "sku": 1,  # design_number
+        "category": 2,
+        "title": 3,
+        "description": 4,  # useless
+        "text": 5,  # useless
+        "photo": 6,  # link
+        "price": 7,  # useless
+        "quantity": 8,  # useless
+        "price_old": 9,  # useless
+        "editions": 10,  # useless
+        "external_id": 11,  # useless
+        "parent_uid": 12,
+        "categories": 13,
     }
-
 
     def __init__(self, product_data: ProductData):
         self.sh = self.get_spreadsheet()
@@ -49,8 +46,6 @@ class Products:
         self.product_data = product_data
         self.parent_uids = {}
 
-       
-        
     @staticmethod
     def get_spreadsheet() -> Spreadsheet:
         with open("google_creds.json", "r") as creds_file:
@@ -61,44 +56,60 @@ class Products:
         return sh
 
     def get_correct_uuid(self, name) -> UUID:
-        if name == 'random':
-            return uuid4()
-        elif str(name).startswith('tilda_uid'):
+        if name == "random":
+            return str(uuid4())
+        elif str(name).startswith("tilda_uid"):
             parent_uid = self.parent_uids.get(name)
             if not parent_uid:
+                parent_uid = str(uuid4())
                 self.parent_uids[name] = parent_uid
             return parent_uid
-        return ''
-    
+        return ""
+
     def get_category(self, category: str) -> str:
         if category:
-            category = category.replace('@category_1', f'{self.product_data["category_1"]};')
-            category = category.replace('@category_2', f'{self.product_data["category_2"]};')
+            category_1 = self.product_data["category_1"]
+            category_1 = category_1 + '; ' if category_1 else category_1
+            category = category.replace(
+                "@category_1", f'{self.product_data["category_1"]};'
+            )
+            category = category.replace(
+                "@category_2", f'{self.product_data["category_2"]}'
+            )
         return category
-    
-    def get_title(self, title: str):
-        title = title.replace('@new_phrase', self.product_data['text'])
-        return title
-    
-    def get_link(self, photo: str):
-        link = self.product_data['links'].get(photo)
-        if not link:
-            log.warning(f'No link found for product: {photo}')
-        return link
-                    
 
+    def get_title(self, title: str):
+        title = title.replace("@new_phrase", self.product_data["text"])
+        return title
+
+    def get_link(self, photo: str):
+        link = self.product_data["links"].get(photo)
+        if not link:
+            log.warning(f"No link found for product: {photo}")
+        return link
 
     def fill_xlsx_template(self, template: List[list]):
         parent_uuids = {}
         for row in template:
-            row[self.column_mapping['tilda_uid']] = self.get_correct_uuid(row[self.column_mapping['tilda_uid']])
-            row[self.column_mapping['sku']] = self.product_data['design_number']
-            row[self.column_mapping['category']] = self.get_category(row[self.column_mapping['category']])
-            row[self.column_mapping['title']] = self.get_title(row[self.column_mapping['title']])
-            row[self.column_mapping['photo']] = self.get_link(row[self.column_mapping['photo']])
-            row[self.column_mapping['parent_uid']] = self.get_correct_uuid(row[self.column_mapping['parent_uid']])
-            row[self.column_mapping['categories']] = self.get_category(row[self.column_mapping['categories']])
-
+            row[self.column_mapping["tilda_uid"]] = self.get_correct_uuid(
+                row[self.column_mapping["tilda_uid"]]
+            )
+            row[self.column_mapping["sku"]] = self.product_data["design_number"]
+            row[self.column_mapping["category"]] = self.get_category(
+                row[self.column_mapping["category"]]
+            )
+            row[self.column_mapping["title"]] = self.get_title(
+                row[self.column_mapping["title"]]
+            )
+            row[self.column_mapping["photo"]] = self.get_link(
+                row[self.column_mapping["photo"]]
+            )
+            row[self.column_mapping["parent_uid"]] = self.get_correct_uuid(
+                row[self.column_mapping["parent_uid"]]
+            )
+            row[self.column_mapping["categories"]] = self.get_category(
+                row[self.column_mapping["categories"]]
+            )
 
     def generate_xlsx(self):
         products_template = self.worksheet.get("A1:X163")[1:]
@@ -109,31 +120,32 @@ class Products:
         for row in products_template:
             print(row)
             ws.append(row)
-        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        filename = f'table_{current_time}.xlsx'
+        current_time = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
+        filename = f"table_{current_time}.xlsx"
         wb.save(f"{XLSX_FILES_DIR}/{filename}")
         log.info(f"Данные сохранены в {filename}")
-    
 
 
-def generate_images(data) -> ProductData:
+def generate_images(data: dict) -> ProductData:
     results = []
     links = {}
-    text = item["text"]
+    text = data["text"]
     product_data: ProductData = {}
     for item in data["items"]:
-        product = item["product"].split('.')[0]
+        product = item["product"].split(".")[0]
         x, y = item["coordinates"]["x"], item["coordinates"]["y"]
         font_size = item["fontSize"]
 
-        folder_path = f'{UNPROCESSED_DIR}/{product}'
+        folder_path = f"{UNPROCESSED_DIR}/{product}"
         objects = os.listdir(folder_path)
-        files = [obj for obj in objects if os.path.isfile(os.path.join(folder_path, obj))]
+        files = [
+            obj for obj in objects if os.path.isfile(os.path.join(folder_path, obj))
+        ]
 
         for file in files:
-            input_path = f'products/initial_images/{product}/{file}'
+            input_path = f"products/initial_images/{product}/{file}"
 
-            color = file.split('.')[0]
+            color = file.split(".")[0]
             phrase = translit(text, "ru", True)
             filename = f"{product}_{color}_{phrase}_{uuid4()}.png"
             filename = secure_filename(filename)
@@ -141,12 +153,14 @@ def generate_images(data) -> ProductData:
 
             if not os.path.exists(input_path):
                 log.error(f"Файл {product} не найден")
-            
+
             image = Image.open(input_path)
             draw = ImageDraw.Draw(image)
 
             try:
-                font = ImageFont.truetype("products/assets/AvantGardeC_regular.otf", font_size)
+                font = ImageFont.truetype(
+                    "products/assets/AvantGardeC_regular.otf", font_size
+                )
             except IOError as exc:
                 log.error(exc)
                 font = ImageFont.load_default()
@@ -156,16 +170,16 @@ def generate_images(data) -> ProductData:
 
             # Сохраняем изображение
             image.save(output_path)
-            link_name = f'{product}_{color}'
+            link_name = f"{product}_{color}"
             link = f'{os.getenv("SERVICE_URL")}/products/download_img/{filename}'  # todo create endpoint for downloading this
             links[link_name] = link
             results.append({"product": product, "output": output_path})
     product_data = dict(
         text=text,
-        category_1=data['category_1'],
-        category_2=data['category_2'],
+        category_1=data["category_1"],
+        category_2=data["category_2"],
         links=links,
-        design_number=data['design_number']
+        design_number=data["design_number"],
     )
     return product_data
 
@@ -174,6 +188,6 @@ def generate_images(data) -> ProductData:
 def generate_product_xlsx(data):
     product_data = generate_images(data)
     product = Products(product_data)
-    product.generate_xlsx(product_data)
-    log.info('Products file generated sucessfully')
+    product.generate_xlsx()
+    log.info("Products file generated sucessfully")
     return 200, "Products file generated sucessfully"

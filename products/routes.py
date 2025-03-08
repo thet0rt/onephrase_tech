@@ -17,7 +17,7 @@ from .products import generate_product_xlsx
 import logging
 from . import products_bp
 
-log = logging.getLogger(os.getenv('APP_NAME'))
+log = logging.getLogger(os.getenv("APP_NAME"))
 
 import os
 from .schemas import ImageRequestSchema
@@ -27,7 +27,8 @@ from .schemas import ImageRequestSchema
 @products_bp.arguments(ImageRequestSchema)
 def generate_images(data):
     generate_product_xlsx.delay(data)
-    return jsonify({"message": "process started", "results": links})
+    return jsonify({"message": "process started"})
+
 
 # # Раздача файлов (для тестирования)
 # @products_bp.route("/output/<filename>")
@@ -43,12 +44,22 @@ def health_check():
 
 @products_bp.route("/download_img/<img_name>", methods=["GET"])
 def download_img(img_name):
-    return send_file(f"{PROCESSED_DIR}/{img_name}")
+    response = send_file(f"{PROCESSED_DIR}/{img_name}")
+    response.direct_passthrough = False
+    return response
 
 
 @products_bp.route("/download_xlsx/<xlsx_filename>", methods=["GET"])
-def download_img(img_name):
-    return send_file(f"{XLSX_FILES_DIR}/{img_name}")
+def download_xlsx(xlsx_filename):
+    filepath = f"{XLSX_FILES_DIR}/{xlsx_filename}"
+    print(os.path.exists(filepath))
+    print(filepath)
+    response = send_file(
+        filepath,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    response.direct_passthrough = False
+    return response
 
 
 @products_bp.route("/xlsx_files", methods=["GET"])
