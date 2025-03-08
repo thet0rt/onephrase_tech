@@ -1,8 +1,9 @@
+import datetime
 import json
 import os
 from typing import List
 from uuid import UUID, uuid4
-import celery
+from celery_settings import celery
 import gspread
 from gspread import Spreadsheet
 
@@ -13,14 +14,13 @@ from werkzeug.utils import secure_filename
 from transliterate import translit
 
 
+from products.const import PROCESSED_DIR, UNPROCESSED_DIR, XLSX_FILES_DIR
 from products.types import ProductData
 
 log = logging.getLogger(os.getenv('APP_NAME'))
-
-STATIC_DIR = "static"
-UNPROCESSED_DIR = 'products/initial_images'
-PROCESSED_DIR = "products/processed_images"
 os.makedirs(PROCESSED_DIR, exist_ok=True)
+os.makedirs(XLSX_FILES_DIR, exist_ok=True)
+
 
 
 class Products:
@@ -77,7 +77,7 @@ class Products:
         return category
     
     def get_title(self, title: str):
-        title = title.replace('@new_phrase', self.product_data['phrase_art'])
+        title = title.replace('@new_phrase', self.product_data['text'])
         return title
     
     def get_link(self, photo: str):
@@ -109,18 +109,20 @@ class Products:
         for row in products_template:
             print(row)
             ws.append(row)
-        wb.save("table.xlsx")
-        log.info("Данные сохранены в table.xlsx")
+        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        filename = f'table_{current_time}.xlsx'
+        wb.save(f"{XLSX_FILES_DIR}/{filename}")
+        log.info(f"Данные сохранены в {filename}")
     
 
 
 def generate_images(data) -> ProductData:
     results = []
     links = {}
+    text = item["text"]
     product_data: ProductData = {}
     for item in data["items"]:
         product = item["product"].split('.')[0]
-        text = item["text"]
         x, y = item["coordinates"]["x"], item["coordinates"]["y"]
         font_size = item["fontSize"]
 
@@ -159,12 +161,13 @@ def generate_images(data) -> ProductData:
             links[link_name] = link
             results.append({"product": product, "output": output_path})
     product_data = dict(
-        phrase_art=text,
+        text=text,
         category_1=data['category_1'],
         category_2=data['category_2'],
         links=links,
         design_number=data['design_number']
     )
+    return product_data
 
 
 @celery.task()

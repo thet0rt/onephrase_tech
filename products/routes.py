@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+from pathlib import Path
 from uuid import uuid4
 
 from flask import Response
@@ -7,6 +8,8 @@ from flask import render_template
 from flask import request, url_for, flash, redirect, jsonify
 from flask import send_file, send_from_directory
 from flask_smorest import abort
+
+from products.const import PROCESSED_DIR, XLSX_FILES_DIR
 
 from .products import generate_product_xlsx
 
@@ -40,4 +43,17 @@ def health_check():
 
 @products_bp.route("/download_img/<img_name>", methods=["GET"])
 def download_img(img_name):
-    return send_file(f"products/processed_images/{img_name}")
+    return send_file(f"{PROCESSED_DIR}/{img_name}")
+
+
+@products_bp.route("/download_xlsx/<xlsx_filename>", methods=["GET"])
+def download_img(img_name):
+    return send_file(f"{XLSX_FILES_DIR}/{img_name}")
+
+
+@products_bp.route("/xlsx_files", methods=["GET"])
+def get_xlsx_list():
+    xlsx_files_path = Path(XLSX_FILES_DIR)
+    files = [f for f in xlsx_files_path.iterdir() if f.is_file()]
+    files_sorted = sorted(files, key=lambda f: f.stat().st_ctime, reverse=True)
+    return jsonify({"files": [file.name for file in files_sorted]})

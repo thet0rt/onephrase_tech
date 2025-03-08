@@ -106,14 +106,16 @@ export default {
                 product: image.src, // Название продукта (можно заменить на что-то более информативное)
                 coordinates: this.imagesTextCoordinates[index], // Координаты текста
                 fontSize: this.imagesFontSizes[index], // Размер шрифта,
-                text: this.phrase,
-                category_1: this.categories[0],
-                category_2: this.categories[1],
-                design_number: this.designNumber
             }));
 
             // Выводим словарь в консоль (для отладки)
-            const productsData = {items: productsDataList}
+            const productsData = {
+                items: productsDataList,
+                category_1: this.categories[0],
+                category_2: this.categories[1],
+                design_number: this.designNumber,
+                text: this.phrase
+            }
             console.log("Сгенерированные данные:", productsData);
 
 
@@ -272,11 +274,12 @@ export default {
 
 <style scoped>
 @import '@/assets/styles.css';
+
 @font-face {
-  font-family: 'OnePhraseFont';
-  src: url('@/assets/fonts/AvantGardeC_regular.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
+    font-family: 'OnePhraseFont';
+    src: url('@/assets/fonts/AvantGardeC_regular.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
 }
 
 
