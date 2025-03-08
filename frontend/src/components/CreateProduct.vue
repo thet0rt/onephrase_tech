@@ -109,19 +109,41 @@ export default {
                 fontSize: this.imagesFontSizes[index], // Размер шрифта,
             }));
 
-            // Выводим словарь в консоль (для отладки)
+            // Формируем словарь данных
             const productsData = {
                 items: productsDataList,
                 category_1: this.categories[0],
                 category_2: this.categories[1],
                 design_number: this.designNumber,
                 text: this.phrase
-            }
+            };
             console.log("Сгенерированные данные:", productsData);
 
-
-            // Отображаем словарь в модальном окне
-            this.showGeneratedData(productsData);
+            // Отправляем данные на сервер
+            fetch(`${import.meta.env.VITE_BACKEND_URL}/products/generate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(productsData),
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        // Если ответ не 2xx, выбрасываем ошибку
+                        throw new Error('Ошибка при генерации файла');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Ответ от сервера:", data);
+                    // Показать alert при успешном ответе
+                    alert(data.message || "Процесс начат");
+                })
+                .catch(error => {
+                    console.error("Ошибка при отправке данных:", error);
+                    // Показать alert при ошибке
+                    alert("Ошибка при генерации файла");
+                });
         },
         showGeneratedData(data) {
             // Преобразуем данные в строку для отображения
