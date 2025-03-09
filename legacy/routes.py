@@ -34,6 +34,7 @@ def download_photo(filename):
 @legacy_bp.route("/tilda_webhook_b2b", methods=["POST", "GET"])
 def webhook_b2b():
     data = request.json
+    log.info(data)
     phone_number = data.get("Phone")
     if not phone_number:
         log.error(f"No phone number in data {data}")
@@ -45,6 +46,7 @@ def webhook_b2b():
 @legacy_bp.route("/tilda_webhook_b2c", methods=["POST", "GET"])
 def webhook_b2c():
     data = request.json
+    log.info(data)
     customer_mail = data.get("email")
     if not customer_mail:
         log.warning(f"No email in data {data}")
