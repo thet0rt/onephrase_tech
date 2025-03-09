@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask import Flask
+from flask import Flask, request
 from legacy import legacy_bp
 from auth import auth_bp
 from administration import admin_bp
@@ -46,16 +46,16 @@ api = Api(app)
 
 # Регистрируем БП
 
-api.register_blueprint(legacy_bp, url_prefix='/')
-api.register_blueprint(auth_bp, url_prefix='/auth')
-api.register_blueprint(admin_bp, url_prefix='/admin')
-api.register_blueprint(money_bp, url_prefix='/money')
-api.register_blueprint(products_bp, url_prefix='/products')
+api.register_blueprint(legacy_bp, url_prefix='/api')
+api.register_blueprint(auth_bp, url_prefix='/api/auth')
+api.register_blueprint(admin_bp, url_prefix='/api/admin')
+api.register_blueprint(money_bp, url_prefix='/api/money')
+api.register_blueprint(products_bp, url_prefix='/api/products')
 
 # Инициируем логин-менеджер
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = '/auth/login'  # todo get_url
+login_manager.login_view = '/api/auth/login'  # todo get_url
 
 
 @login_manager.user_loader
