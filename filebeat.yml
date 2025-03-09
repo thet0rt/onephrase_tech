@@ -19,6 +19,4 @@ output.elasticsearch:
   allow_older_versions: true
   index: "onephrase_tech_logs-%{+yyyy.MM.dd}"
   api_key: "${ELK_API_KEY}"
-  username: "${FILEBEAT_USER}"
-  password: "${FILEBEAT_PASSWORD}"
 setup.ilm.enabled: false
