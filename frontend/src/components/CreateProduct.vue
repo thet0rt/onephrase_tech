@@ -120,7 +120,7 @@ export default {
             console.log("Сгенерированные данные:", productsData);
 
             // Отправляем данные на сервер
-            fetch(`${import.meta.env.VITE_BACKEND_URL}/products/generate`, {
+            fetch(`/products/generate`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

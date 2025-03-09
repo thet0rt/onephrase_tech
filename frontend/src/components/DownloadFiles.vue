@@ -44,7 +44,7 @@ export default {
         async fetchFiles() {
             try {
                 console.log(import.meta.env.VITE_BACKEND_URL);
-                const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/products/xlsx_files`);
+                const response = await fetch(`api/products/xlsx_files`);
                 const data = await response.json();
                 this.files = data.files;
             } catch (error) {
@@ -52,7 +52,7 @@ export default {
             }
         },
         downloadFile(filename) {
-            window.location.href = `${import.meta.env.VITE_BACKEND_URL}/products/download_xlsx/${filename}`;
+            window.location.href = `api/products/download_xlsx/${filename}`;
         }
     }
 };
