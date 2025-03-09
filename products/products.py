@@ -171,7 +171,7 @@ def generate_images(data: dict) -> ProductData:
             # Сохраняем изображение
             image.save(output_path)
             link_name = f"{product}_{color}"
-            link = f'{os.getenv("SERVICE_URL")}api/products/download_img/{filename}'  # todo create endpoint for downloading this
+            link = f'{os.getenv("SERVICE_URL")}/api/products/download_img/{filename}'  # todo create endpoint for downloading this
             links[link_name] = link
             results.append({"product": product, "output": output_path})
     product_data = dict(
