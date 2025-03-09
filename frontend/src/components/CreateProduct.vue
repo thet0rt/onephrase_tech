@@ -120,7 +120,7 @@ export default {
             console.log("Сгенерированные данные:", productsData);
 
             // Отправляем данные на сервер
-            fetch(`/products/generate`, {
+            fetch(`/api/products/generate`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
