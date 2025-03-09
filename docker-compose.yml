@@ -58,6 +58,15 @@ services:
     env_file:
       - .env
 
+  filebeat:
+    image: dockerhub.timeweb.cloud/elastic/filebeat:8.10.2
+    container_name: filebeat
+    volumes:
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./log/app.log:/usr/share/app/app.log:ro # Монтируем ваш лог-файл
+    env_file:
+      - ./.env
+
 volumes:
   redis_data:
   db:

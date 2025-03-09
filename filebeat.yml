@@ -15,7 +15,7 @@ setup.template:
   pattern: "onephrase_tech_logs-*"
   enabled: true
 output.elasticsearch:
-  hosts: ["http://elasticsearch:9200"]
+  hosts: ["${FILEBEAT_HOST}"]
   allow_older_versions: true
   index: "onephrase_tech_logs-%{+yyyy.MM.dd}"
   username: "${FILEBEAT_USER}"
