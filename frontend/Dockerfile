@@ -1,8 +1,6 @@
 FROM node:18 AS builder
 WORKDIR /app
 COPY package.json package-lock.json ./
-ARG VITE_BACKEND_URL
-ENV VITE_BACKEND_URL=http://localhost:8015
 RUN npm install
 COPY . .
 RUN npm run build
