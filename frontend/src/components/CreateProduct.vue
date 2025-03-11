@@ -72,10 +72,10 @@ export default {
             phraseCount: 0,
             images: [
                 { src: "hoodie.png", bigSrc: "hoodie_big.png" },
-                { src: "sweetshirt.png", bigSrc: "sweetshirt_big.png" },
+                { src: "sweatshirt.png", bigSrc: "sweatshirt_big.png" },
                 { src: "longsleeve.png", bigSrc: "longsleeve_big.png" },
                 { src: "tshirt-basic.png", bigSrc: "tshirt-basic_big.png" },
-                { src: "tshirt-true_over.png", bigSrc: "tshirt-true_over_big.png" }
+                { src: "tshirt-trueover.png", bigSrc: "tshirt-trueover_big.png" }
             ],
             imagesTextCoordinates: [
                 { x: 188, y: 409 },
