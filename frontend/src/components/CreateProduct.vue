@@ -23,7 +23,6 @@
                 <h4 class="input__phrase__name">введите категории</h4>
                 <input class="input__category" type="text" v-model="categories[0]" placeholder="категория">
                 <input class="input__category" type="text" v-model="categories[1]" placeholder="категория">
-                <input class="input__category" type="text" v-model="categories[2]" placeholder="категория">
             </div>
             <div class="components">
                 <div v-for="(item, index) in images" :key="index" class="img__button">
@@ -69,7 +68,7 @@ export default {
         return {
             phrase: "",
             designNumber: "",
-            categories: ["", "", ""],
+            categories: ["", ""],
             phraseCount: 0,
             images: [
                 { src: "hoodie.png", bigSrc: "hoodie_big.png" },
@@ -120,7 +119,7 @@ export default {
             console.log("Сгенерированные данные:", productsData);
 
             // Отправляем данные на сервер
-            fetch(`/api/products/generate`, {
+            fetch('/api/products/generate', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -333,6 +332,7 @@ export default {
     height: 100%;
     background-color: rgba(255, 255, 255, 0.5);
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: 1000;
@@ -372,7 +372,11 @@ export default {
     outline: none;
     white-space: pre-line;
     /* Отображает переносы строк */
+    
 
+}
 
+.close {
+    justify-self: left;
 }
 </style>

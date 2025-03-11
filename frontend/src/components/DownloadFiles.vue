@@ -43,7 +43,6 @@ export default {
     methods: {
         async fetchFiles() {
             try {
-                console.log(import.meta.env.VITE_BACKEND_URL);
                 const response = await fetch(`api/products/xlsx_files`);
                 const data = await response.json();
                 this.files = data.files;

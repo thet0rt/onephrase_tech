@@ -15,6 +15,8 @@ from werkzeug.utils import secure_filename
 from celery_settings import celery
 from products.const import PROCESSED_DIR, UNPROCESSED_DIR, XLSX_FILES_DIR
 from products.types import ProductData
+import pytz
+
 
 log = logging.getLogger(os.getenv("APP_NAME"))
 os.makedirs(PROCESSED_DIR, exist_ok=True)
@@ -79,7 +81,10 @@ class Products:
         return category
 
     def get_title(self, title: str):
-        title = title.replace("@new_phrase", self.product_data["text"])
+        text = self.product_data["text"]
+        while '\n' in text:
+            text = text.replace('\n', ' ')
+        title = title.replace("@new_phrase", text)
         return title
 
     def get_link(self, photo: str):
@@ -112,15 +117,21 @@ class Products:
             )
 
     def generate_xlsx(self):
-        products_template = self.worksheet.get("A1:X163")[1:]
+        products_template = self.worksheet.get("A1:X163")
+        titles = products_template[:1]
+        products_template = products_template[1:]
+        
         self.fill_xlsx_template(products_template)
         wb = Workbook()
         ws = wb.active
         ws.title = "Таблица"
-        for row in products_template:
+        complete_table = titles + products_template
+        for row in complete_table:
             print(row)
             ws.append(row)
-        current_time = dt.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+        moscow_tz = pytz.timezone("Europe/Moscow")
+        current_time = dt.now(moscow_tz).strftime("%Y-%m-%d_%H-%M-%S")
         filename = f"table_{current_time}.xlsx"
         wb.save(f"{XLSX_FILES_DIR}/{filename}")
         log.info(f"Данные сохранены в {filename}")
