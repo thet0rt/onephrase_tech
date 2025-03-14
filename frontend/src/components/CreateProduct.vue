@@ -191,7 +191,7 @@ export default {
         resetForm() {
             this.phrase = "";
             this.designNumber = "";
-            this.categories = ["", "", ""];
+            this.categories = ["", ""];
             this.phraseCount = 0;
         },
         addPhrase() {
