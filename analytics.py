@@ -436,8 +436,8 @@ class AnalyticsB2C:
         ]
         return response_list
 
-    def update_b2c_data(self):
-        for i in list(range(3, 500)):
+    def update_b2c_data(self, start: int = 3):
+        for i in list(range(start, 630)):
             date_list = self.worksheet.batch_get([f"B{i}", f"C{i}"])
             date_start, date_end = date_list
             date_start = date_start[0][0]
@@ -453,6 +453,37 @@ class AnalyticsB2C:
 
             response_list = self.create_report_list()
             self.worksheet.update([response_list], f"D{i}")
+            
+    def find_current_date_row(self):
+        today = datetime.today().date()
+
+        for i in range(3, 630):
+            cell_value = self.worksheet.acell(f"B{i}").value
+            if not cell_value:
+                continue
+
+            try:
+                cell_date = datetime.strptime(cell_value, "%d.%m.%Y").date()  # Парсим дату в нужном формате
+                if cell_date == today:
+                    return i
+            except ValueError:
+                log.warning(f"Invalid date format in row {i}: {cell_value}")
+
+        log.error('Дата для синхронизации не найдена.')
+        return None  # Если дата не найдена
+    
+    def sync_last_month(self):
+        current_row = self.find_current_date_row()
+        if not current_row:
+            log.error("Current date not found in column B")
+            return
+
+        start_row = max(3, current_row - 30)  # Ограничение, чтобы не выйти за границы
+        log.info(f"Starting sync from row {start_row}")
+
+        self.update_b2c_data(start=start_row)
+        
+        
 
 
 class AnalyticsException(Exception):

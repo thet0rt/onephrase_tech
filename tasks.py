@@ -80,10 +80,10 @@ def handle_crm_updates():
 @celery.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(
-        crontab(hour="1", minute=30), sync_analytics.s()  # every hour at 0 minutes
+        crontab(hour="1", minute=30), sync_analytics.s()
     )
     sender.add_periodic_task(
-        crontab(hour="3", minute=0), sync_analytics_b2c.s()  # every hour at 0 minutes
+        crontab(hour="3", minute=0), sync_analytics_b2c.s()
     )
     sender.add_periodic_task(
         crontab(hour="*/1", minute=30), expire_old_links.s()  # every hour at 30 minutes
