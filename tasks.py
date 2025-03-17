@@ -75,6 +75,15 @@ def handle_crm_updates():
     except Exception as exc:
         log.exception(exc)
         return 400, f"Error while handling updates form crm exc={exc}"
+    
+
+@celery.task()
+def sync_analytics_b2c_last_month():
+    analytics = AnalyticsB2C(None, None)
+    analytics.sync_last_month()
+    log.info("Sync finished successfully")
+    return 200, "Sync finished successfully"
+
 
 
 @celery.on_after_finalize.connect
@@ -83,7 +92,7 @@ def setup_periodic_tasks(sender, **kwargs):
         crontab(hour="1", minute=30), sync_analytics.s()
     )
     sender.add_periodic_task(
-        crontab(hour="3", minute=0), sync_analytics_b2c.s()
+        crontab(hour="*/1", minute=0), sync_analytics_b2c_last_month.s()
     )
     sender.add_periodic_task(
         crontab(hour="*/1", minute=30), expire_old_links.s()  # every hour at 30 minutes

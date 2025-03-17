@@ -437,40 +437,50 @@ class AnalyticsB2C:
         return response_list
 
     def update_b2c_data(self, start: int = 3):
-        for i in list(range(start, 630)):
-            date_list = self.worksheet.batch_get([f"B{i}", f"C{i}"])
-            date_start, date_end = date_list
-            date_start = date_start[0][0]
-            date_end = date_end[0][0]
+        rows_range = f"B{start}:C630"
+        data = self.worksheet.get(rows_range)
+
+        updates = []
+
+        for i, row in enumerate(data, start=start):
+            if len(row) < 2:
+                log.warning(f"Skipping row {i}: not enough data")
+                continue
+
+            date_start, date_end = row
             if self.date_after_today(date_start):
-                log.info(
-                    f"Finished analytics on dates {date_start} - {date_end}, row {i}"
-                )
-                return
+                log.info(f"Finished analytics on dates {date_start} - {date_end}, row {i}")
+                break
+
             self.start_date = self.transform_date(str(date_start))
             self.end_date = self.transform_date(str(date_end))
-            log.info('start_date=%s, end_date=%s', self.start_date, self.end_date)
+            log.info("start_date=%s, end_date=%s", self.start_date, self.end_date)
 
             response_list = self.create_report_list()
-            self.worksheet.update([response_list], f"D{i}")
+            updates.append({'range': f"D{i}", 'values': [response_list]})
+
+        if updates:
+            self.worksheet.batch_update(updates)
             
     def find_current_date_row(self):
         today = datetime.today().date()
 
-        for i in range(3, 630):
-            cell_value = self.worksheet.acell(f"B{i}").value
+        cell_values = self.worksheet.get("B3:B630")
+
+        for i, row in enumerate(cell_values, start=3):
+            cell_value = row[0] if row else None
             if not cell_value:
                 continue
 
             try:
-                cell_date = datetime.strptime(cell_value, "%d.%m.%Y").date()  # Парсим дату в нужном формате
+                cell_date = datetime.strptime(cell_value, "%d.%m.%Y").date()
                 if cell_date == today:
                     return i
             except ValueError:
                 log.warning(f"Invalid date format in row {i}: {cell_value}")
 
-        log.error('Дата для синхронизации не найдена.')
-        return None  # Если дата не найдена
+        log.error("Дата для синхронизации не найдена.")
+        return None
     
     def sync_last_month(self):
         current_row = self.find_current_date_row()
@@ -478,7 +488,7 @@ class AnalyticsB2C:
             log.error("Current date not found in column B")
             return
 
-        start_row = max(3, current_row - 30)  # Ограничение, чтобы не выйти за границы
+        start_row = max(3, current_row - 35)  # Ограничение, чтобы не выйти за границы
         log.info(f"Starting sync from row {start_row}")
 
         self.update_b2c_data(start=start_row)
