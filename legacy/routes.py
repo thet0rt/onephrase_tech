@@ -17,7 +17,7 @@ from db import r
 from methods import handle_webhook_b2c, handle_webhook_b2b, allowed_file, humanize_exp_date, get_date_from_redis, \
     get_tg_id_by_session_id, check_if_chat_member_by_tg_id
 from regru_task.regru_task import TgIntegration, CrmUpdatesHandler
-from tasks import sync_analytics, create_links_from_photos, sync_analytics_b2c
+from tasks import sync_analytics, create_links_from_photos, sync_analytics_b2c, sync_analytics_b2c_last_month
 from . import legacy_bp
 from .schemas import AddTagSchema
 
@@ -117,6 +117,17 @@ def get_analytics_b2c():
         analytics = AnalyticsB2C(start_date, end_date)
         return analytics.create_report_list()
     sync_analytics_b2c.delay()
+    return Response("ok", 200)
+
+
+@legacy_bp.get("/analytics_b2c_last_month")
+def get_analytics_b2c():
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
+    if start_date and end_date:
+        analytics = AnalyticsB2C(start_date, end_date)
+        return analytics.create_report_list()
+    sync_analytics_b2c_last_month.delay()
     return Response("ok", 200)
 
 
