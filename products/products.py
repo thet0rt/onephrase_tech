@@ -17,14 +17,12 @@ from products.const import PROCESSED_DIR, UNPROCESSED_DIR, XLSX_FILES_DIR
 from products.types import ProductData
 import pytz
 
-
 log = logging.getLogger(os.getenv("APP_NAME"))
 os.makedirs(PROCESSED_DIR, exist_ok=True)
 os.makedirs(XLSX_FILES_DIR, exist_ok=True)
 
 
 class Products:
-
     column_mapping = {
         "tilda_uid": 0,
         "sku": 1,  # design_number
@@ -120,7 +118,7 @@ class Products:
         products_template = self.worksheet.get("A1:X163")
         titles = products_template[:1]
         products_template = products_template[1:]
-        
+
         self.fill_xlsx_template(products_template)
         wb = Workbook()
         ws = wb.active
@@ -141,7 +139,6 @@ def generate_images(data: dict) -> ProductData:
     results = []
     links = {}
     text = data["text"]
-    product_data: ProductData = {}
     for item in data["items"]:
         product = item["product"].split(".")[0]
         x, y = item["coordinates"]["x"], item["coordinates"]["y"]
@@ -154,11 +151,13 @@ def generate_images(data: dict) -> ProductData:
         ]
 
         for file in files:
+            if not file.endswith(".jpg"):
+                continue
             input_path = f"products/initial_images/{product}/{file}"
 
             color = file.split(".")[0]
             phrase = translit(text, "ru", True)
-            filename = f"{product}_{color}_{phrase}_{uuid4()}.png"
+            filename = f"{product}_{color}_{phrase}_{uuid4()}.jpg"
             filename = secure_filename(filename)
             output_path = os.path.join(PROCESSED_DIR, filename)
 
@@ -170,17 +169,21 @@ def generate_images(data: dict) -> ProductData:
 
             try:
                 font = ImageFont.truetype(
-                    "products/assets/AvantGardeC_regular.otf", font_size
+                    "products/assets/AvantGardeC_regular.otf", font_size*6
                 )
             except IOError as exc:
                 log.error(exc)
                 font = ImageFont.load_default()
 
             # Добавляем текст
-            draw.text((x, y), text, fill="white", font=font)
+            draw.text((x*6, y*6), text, fill="white", font=font)
 
             # Сохраняем изображение
-            image.save(output_path)
+            width, height = image.size
+            new_width = int(width * 0.5)  # Уменьшаем до 80% от оригинала
+            new_height = int(height * 0.5)
+            image = image.resize((new_width, new_height))
+            image.save(output_path, "JPEG", quality=85,optimize=True)  # Уменьшаем размер файла
             link_name = f"{product}_{color}"
             link = f'{os.getenv("SERVICE_URL")}/api/products/download_img/{filename}'  # todo create endpoint for downloading this
             links[link_name] = link
