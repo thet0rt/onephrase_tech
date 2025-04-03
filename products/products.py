@@ -151,6 +151,8 @@ def generate_images(data: dict) -> ProductData:
         ]
 
         for file in files:
+            if not file.endswith(".jpg"):
+                continue
             input_path = f"products/initial_images/{product}/{file}"
 
             color = file.split(".")[0]
