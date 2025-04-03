@@ -20,6 +20,8 @@ services:
     volumes:
       - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
       - redis_data:/data
+    ports:
+      - "6379:6379"
 
   app:
     build: .
