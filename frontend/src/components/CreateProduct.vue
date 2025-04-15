@@ -13,8 +13,8 @@
       </div>
       <div class="container__input_phrase">
         <h4 class="input__phrase__name">введите фразу</h4>
-        <textarea class='input__phrase' v-model="phrase" placeholder="Введите фразу"></textarea>
-      </div>
+        <textarea class='input__phrase' v-model="phrase" placeholder="Введите фразу"
+                  @blur="recalculateAllTextX"></textarea></div>
       <div class="container__input_phrase">
         <h4 class="input__phrase__name">введите номер дизайна</h4>
         <input class="input__phrase" type="text" v-model="designNumber"
@@ -82,8 +82,8 @@ export default {
       ],
       imagesTextCoordinates: [
         {x: 188, y: 409},
-        {x: 180, y: 365},
-        {x: 185, y: 300},
+        {x: 180, y: 394},
+        {x: 185, y: 316},
         {x: 180, y: 365},
         {x: 185, y: 300}
       ],
@@ -115,7 +115,7 @@ export default {
         design_number: this.designNumber,
         text: this.phrase
       };
-          },
+    },
     isDuplicate(data) {
       return this.phrasesDataList.some(
         item => JSON.stringify(item) === JSON.stringify(data)
@@ -147,6 +147,34 @@ export default {
     updateText(e) {
       // При вводе текста сохраняем HTML с тегами <br> для переноса строк
       this.phrase = e.target.innerHTML;
+      this.$nextTick(() => {
+        const editableEl = this.$refs.editableText;
+        const canvasRect = this.canvas.getBoundingClientRect();
+        const textRect = editableEl.getBoundingClientRect();
+        console.log(this.canvas.width)
+        const newTextX = (540 - textRect.width) / 2;
+        this.textX = newTextX;
+        this.imagesTextCoordinates = this.imagesTextCoordinates.map(coord => ({
+          ...coord,
+          x: newTextX
+        }));
+      });
+    },
+    measureTextWidth(text, fontSize, fontFamily = 'OnePhraseFont') {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.font = `${fontSize}px ${fontFamily}`;
+      return ctx.measureText(text).width;
+    },
+    recalculateAllTextX() {
+      this.imagesTextCoordinates = this.imagesFontSizes.map((fontSize, index) => {
+        const width = this.measureTextWidth(this.phrase, fontSize);
+        const newX = (540 - width) / 2;
+        return {
+          ...this.imagesTextCoordinates[index],
+          x: newX
+        };
+      });
     },
     handleKeyDown(e) {
       if (e.key === 'Enter') {
