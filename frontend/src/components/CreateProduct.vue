@@ -164,7 +164,19 @@ export default {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       ctx.font = `${fontSize}px ${fontFamily}`;
-      return ctx.measureText(text).width;
+
+      // Учитываем возможные переносы строк: и \n, и <br>
+      const lines = text
+        .replace(/<br\s*\/?>/gi, '\n')  // превращаем <br> в \n
+        .split('\n');
+
+      let maxWidth = 0;
+      for (const line of lines) {
+        const lineWidth = ctx.measureText(line).width;
+        if (lineWidth > maxWidth) maxWidth = lineWidth;
+      }
+
+      return maxWidth;
     },
     recalculateAllTextX() {
       this.imagesTextCoordinates = this.imagesFontSizes.map((fontSize, index) => {
