@@ -70,6 +70,7 @@ export default {
             designNumber: "",
             categories: ["", ""],
             phraseCount: 0,
+            phrasesDataList: [],
             images: [
                 { src: "hoodie.png", bigSrc: "hoodie_big.png" },
                 { src: "sweatshirt.png", bigSrc: "sweatshirt_big.png" },
@@ -101,24 +102,8 @@ export default {
     },
     methods: {
         generateFile() {
-            // Создаем словарь с данными для каждого продукта
-            const productsDataList = this.images.map((image, index) => ({
-                product: image.src, // Название продукта (можно заменить на что-то более информативное)
-                coordinates: this.imagesTextCoordinates[index], // Координаты текста
-                fontSize: this.imagesFontSizes[index], // Размер шрифта,
-            }));
+            const productsData = this.phrasesDataList;
 
-            // Формируем словарь данных
-            const productsData = {
-                items: productsDataList,
-                category_1: this.categories[0],
-                category_2: this.categories[1],
-                design_number: this.designNumber,
-                text: this.phrase
-            };
-            console.log("Сгенерированные данные:", productsData);
-
-            // Отправляем данные на сервер
             fetch('/api/products/generate', {
                 method: 'POST',
                 headers: {
@@ -146,7 +131,7 @@ export default {
         },
         showGeneratedData(data) {
             // Преобразуем данные в строку для отображения
-            const dataString = JSON.stringify(data, null, 2);
+            const dataString = JSON.stringify(this.phrasesDataList, null, 2);
 
             // Создаем модальное окно для отображения данных
             alert("Сгенерированные данные:\n" + dataString);
@@ -193,9 +178,30 @@ export default {
             this.designNumber = "";
             this.categories = ["", ""];
             this.phraseCount = 0;
+            this.phrasesDataList = [];
         },
         addPhrase() {
+            // Создаем данные текущей фразы
+            const currentPhraseData = {
+                items: this.images.map((image, index) => ({
+                    product: image.src,
+                    coordinates: this.imagesTextCoordinates[index],
+                    fontSize: this.imagesFontSizes[index],
+                })),
+                category_1: this.categories[0],
+                category_2: this.categories[1],
+                design_number: this.designNumber,
+                text: this.phrase
+            };
+
+            // Добавляем в список
+            this.phrasesDataList.push(currentPhraseData);
+
+            // Увеличиваем счётчик и очищаем поля
             this.phraseCount++;
+            this.phrase = "";
+            this.designNumber = "";
+            this.categories = ["", ""];
         },
         openModal(index) {
             this.selectedImageIndex = index; // Сохраняем индекс выбранной картинки
@@ -372,7 +378,7 @@ export default {
     outline: none;
     white-space: pre-line;
     /* Отображает переносы строк */
-    
+
 
 }
 
