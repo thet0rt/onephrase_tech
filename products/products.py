@@ -1,3 +1,4 @@
+from copy import deepcopy
 from datetime import datetime as dt
 import json
 import logging
@@ -20,6 +21,14 @@ import pytz
 log = logging.getLogger(os.getenv("APP_NAME"))
 os.makedirs(PROCESSED_DIR, exist_ok=True)
 os.makedirs(XLSX_FILES_DIR, exist_ok=True)
+BLACK_COLOR_ITEMS = [('hoodie', 'milk'),
+                     ('sweatshirt', 'milk'),
+                     ('longsleeve', 'milk'),
+                     ('tshirt-basic', 'milk'),
+                     ('tshirt-trueover', 'coldwhite'),
+                     ('tshirt-trueover100', 'coldwhite'),
+                     ('hoodie', 'melange'),
+                     ('tshirt-basic', 'melange')]
 
 
 class Products:
@@ -71,11 +80,12 @@ class Products:
             category_1 = self.product_data["category_1"]
             category_1 = category_1 + '; ' if category_1 else category_1
             category = category.replace(
-                "@category_1", f'{self.product_data["category_1"]};'
+                "@category_1", f'{self.product_data["category_1"]}'
             )
             category = category.replace(
                 "@category_2", f'{self.product_data["category_2"]}'
             )
+            category = category.strip()
         return category
 
     def get_title(self, title: str):
@@ -130,7 +140,7 @@ class Products:
 
         moscow_tz = pytz.timezone("Europe/Moscow")
         current_time = dt.now(moscow_tz).strftime("%Y-%m-%d_%H-%M-%S")
-        filename = f"table_{current_time}.xlsx"
+        filename = f"table_{current_time}.csv"
         wb.save(f"{XLSX_FILES_DIR}/{filename}")
         log.info(f"Данные сохранены в {filename}")
 
@@ -175,15 +185,18 @@ def generate_images(data: dict) -> ProductData:
                 log.error(exc)
                 font = ImageFont.load_default()
 
-            # Добавляем текст
-            draw.text((x*6, y*6), text, fill="white", font=font)
+            if (product, color) in BLACK_COLOR_ITEMS:
+                text_color = '#222222'
+            else:
+                text_color = 'white'
 
-            # Сохраняем изображение
+            draw.text((x*6, y*6), text, fill=text_color, font=font)
+
             width, height = image.size
-            new_width = int(width * 0.5)  # Уменьшаем до 80% от оригинала
+            new_width = int(width * 0.5)
             new_height = int(height * 0.5)
             image = image.resize((new_width, new_height))
-            image.save(output_path, "JPEG", quality=85,optimize=True)  # Уменьшаем размер файла
+            image.save(output_path, "JPEG", quality=85, optimize=True)
             link_name = f"{product}_{color}"
             link = f'{os.getenv("SERVICE_URL")}/api/products/download_img/{filename}'  # todo create endpoint for downloading this
             links[link_name] = link
@@ -198,8 +211,17 @@ def generate_images(data: dict) -> ProductData:
     return product_data
 
 
+def add_additional_products(data):
+    product_list = data['items']
+    tshirt_trueover = next((item for item in product_list if item.get('product') == 'tshirt-trueover.png'), None)
+    trueover_100 = deepcopy(tshirt_trueover)
+    trueover_100['product'] = 'tshirt-trueover100'
+    product_list.append(trueover_100)
+
+
 @celery.task()
 def generate_product_xlsx(data):
+    add_additional_products(data)
     product_data = generate_images(data)
     product = Products(product_data)
     product.generate_xlsx()

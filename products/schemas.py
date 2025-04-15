@@ -12,7 +12,6 @@ class TextOverlaySchema(Schema):
     fontSize = fields.Int(required=True)
     
 
-
 class ImageRequestSchema(Schema):
     items = fields.List(fields.Nested(TextOverlaySchema), required=True)
     category_1 = fields.Str(required=True)
