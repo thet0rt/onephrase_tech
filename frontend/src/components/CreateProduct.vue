@@ -41,7 +41,7 @@
     <!-- Модальное окно -->
     <div v-if="isModalOpen" class="modal">
       <div class="modal__content">
-      <span class="close" @click="closeModal">&times;</span>
+        <span class="close" @click="closeModal">&times;</span>
         <canvas ref="canvas" class="modal__canvas"></canvas>
         <!-- Редактируемый текст -->
         <div v-if="isModalOpen" ref="editableText" class="editable-text" :style="{
@@ -53,11 +53,11 @@
              @blur="saveText">
           {{ phrase }}
         </div>
-      <div class="font-size-controls">
-        <button @click="decreaseFontSize">Уменьшить шрифт</button>
-        <span class="fontDisplay">Размер шрифта: {{ fontSize }}px</span>
-        <button @click="increaseFontSize">Увеличить шрифт</button>
-      </div>
+        <div class="font-size-controls">
+          <button @click="decreaseFontSize">Уменьшить шрифт</button>
+          <span class="fontDisplay">Размер шрифта: {{ fontSize }}px</span>
+          <button @click="increaseFontSize">Увеличить шрифт</button>
+        </div>
       </div>
       <div class="modal__backdrop" @click="closeModal"></div>
     </div>
@@ -104,11 +104,17 @@ export default {
     };
   },
   methods: {
+    fixCoordinates(coordinates) {
+      return {
+        x: coordinates.x - 30,
+        y: coordinates.y - 30
+      };
+    },
     createCurrentPhraseData() {
       return {
         items: this.images.map((image, index) => ({
           product: image.src,
-          coordinates: this.imagesTextCoordinates[index],
+          coordinates: this.fixCoordinates(this.imagesTextCoordinates[index]),
           fontSize: this.imagesFontSizes[index],
         })),
         category_1: this.categories[0],
@@ -129,7 +135,6 @@ export default {
           this.phrasesDataList.push(currentPhraseData);
         }
       }
-
       fetch('/api/products/generate', {
         method: 'POST',
         headers: {
@@ -182,7 +187,7 @@ export default {
     recalculateAllTextX() {
       this.imagesTextCoordinates = this.imagesFontSizes.map((fontSize, index) => {
         const width = this.measureTextWidth(this.phrase, fontSize);
-        const newX = (540 - width) / 2;
+        const newX = (600 - width) / 2;
         return {
           ...this.imagesTextCoordinates[index],
           x: newX
@@ -367,7 +372,7 @@ export default {
   background-color: white;
   border: 1px solid black;
   z-index: 2;
-  padding: 20px;
+  padding: 30px 30px 35px 30px;
   border-radius: 8px;
 }
 
@@ -418,20 +423,22 @@ export default {
 }
 
 .close {
-  //justify-self: left;
-  position: relative;
-  z-index: 300;
-  margin: 0;
-  padding: 0;
-  //align-self: flex-start;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 6;
+  cursor: pointer;
 }
 
 .font-size-controls {
+  padding-top: 5px;
   display: flex;
   gap: 5px;
-  position: relative;
-  z-index: 2;
+  position: absolute;
+  left: 80px;
+  z-index: 5;
 }
+
 .fontDisplay {
   color: black;
 }
