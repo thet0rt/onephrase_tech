@@ -104,7 +104,6 @@ export default {
   },
   methods: {
     generateFile() {
-      // Добавляем текущую фразу в список перед отправкой
       const currentPhraseData = {
         items: this.images.map((image, index) => ({
           product: image.src,
@@ -117,7 +116,13 @@ export default {
         text: this.phrase
       };
 
-      this.phrasesDataList.push(currentPhraseData);
+      const exists = this.phrasesDataList.some(
+        item => JSON.stringify(item) === JSON.stringify(currentPhraseData)
+      );
+
+      if (!exists) {
+        this.phrasesDataList.push(currentPhraseData);
+      }
 
       // Отправляем весь список на сервер
       const productsData = this.phrasesDataList;
@@ -195,8 +200,15 @@ export default {
         text: this.phrase
       };
 
-      // Добавляем в список
-      this.phrasesDataList.push(currentPhraseData);
+
+
+      const exists = this.phrasesDataList.some(
+        item => JSON.stringify(item) === JSON.stringify(currentPhraseData)
+      );
+
+      if (!exists) {
+        this.phrasesDataList.push(currentPhraseData);
+      }
 
       // Увеличиваем счётчик и очищаем поля
       this.phraseCount++;
