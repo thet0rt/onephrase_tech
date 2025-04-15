@@ -124,25 +124,16 @@ class Products:
                 row[self.column_mapping["categories"]]
             )
 
-    def generate_xlsx(self):
+    def generate_xlsx(self, index: int):
         products_template = self.worksheet.get("A1:X163")
         titles = products_template[:1]
-        products_template = products_template[1:]
+        rows = products_template[1:]
 
-        self.fill_xlsx_template(products_template)
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Таблица"
-        complete_table = titles + products_template
-        for row in complete_table:
-            print(row)
-            ws.append(row)
+        self.fill_xlsx_template(rows)
+        if index == 0:
+            rows = titles + rows
+        return rows
 
-        moscow_tz = pytz.timezone("Europe/Moscow")
-        current_time = dt.now(moscow_tz).strftime("%Y-%m-%d_%H-%M-%S")
-        filename = f"table_{current_time}.csv"
-        wb.save(f"{XLSX_FILES_DIR}/{filename}")
-        log.info(f"Данные сохранены в {filename}")
 
 
 def generate_images(data: dict) -> ProductData:
@@ -210,6 +201,20 @@ def generate_images(data: dict) -> ProductData:
     )
     return product_data
 
+def generate_xlsx(rows):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Таблица"
+    for row in rows:
+        print(row)
+        ws.append(row)
+
+    moscow_tz = pytz.timezone("Europe/Moscow")
+    current_time = dt.now(moscow_tz).strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f"table_{current_time}.csv"
+    wb.save(f"{XLSX_FILES_DIR}/{filename}")
+    log.info(f"Данные сохранены в {filename}")
+
 
 def add_additional_products(data):
     product_list = data['items']
@@ -220,10 +225,14 @@ def add_additional_products(data):
 
 
 @celery.task()
-def generate_product_xlsx(data):
-    add_additional_products(data)
-    product_data = generate_images(data)
-    product = Products(product_data)
-    product.generate_xlsx()
+def generate_product_xlsx(items):
+    rows = []
+    for i, data in enumerate(items):
+        add_additional_products(data)
+        product_data = generate_images(data)
+        product = Products(product_data)
+        new_rows = product.generate_xlsx(i)
+        rows = rows + new_rows
+    generate_xlsx(rows)
     log.info("Products file generated sucessfully")
     return 200, "Products file generated sucessfully"
