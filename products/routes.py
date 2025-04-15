@@ -24,7 +24,7 @@ from .schemas import ImageRequestSchema
 
 
 @products_bp.route("/generate", methods=["POST"])
-@products_bp.arguments(ImageRequestSchema)
+@products_bp.arguments(ImageRequestSchema(many=True))
 def generate_images(data):
     generate_product_xlsx.delay(data)
     return jsonify({"message": "process started"})
