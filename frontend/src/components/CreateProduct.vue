@@ -141,7 +141,24 @@ export default {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(this.phrasesDataList),
-      });
+      })
+                .then(response => {
+                    if (!response.ok) {
+                        // Если ответ не 2xx, выбрасываем ошибку
+                        throw new Error('Ошибка при генерации файла');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Ответ от сервера:", data);
+                    // Показать alert при успешном ответе
+                    alert(data.message || "Процесс начат");
+                })
+                .catch(error => {
+                    console.error("Ошибка при отправке данных:", error);
+                    // Показать alert при ошибке
+                    alert("Ошибка при генерации файла");
+                });
     },
     showGeneratedData(data) {
       // Преобразуем данные в строку для отображения
