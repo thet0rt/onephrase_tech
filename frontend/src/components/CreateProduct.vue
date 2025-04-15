@@ -423,11 +423,26 @@ export default {
 }
 
 .close {
+  font-size: 16px;
+  color: #333;
+  background-color: #f2f2f2;
+  border: none;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  top: 5px;
+  left: 5px;
   position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 6;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.2s ease, transform 0.2s ease;
   cursor: pointer;
+}
+
+.close:hover {
+  background-color: #ddd;
+  transform: scale(1.1);
 }
 
 .font-size-controls {
