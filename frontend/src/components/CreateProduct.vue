@@ -40,8 +40,8 @@
 
     <!-- Модальное окно -->
     <div v-if="isModalOpen" class="modal">
-      <span class="close" @click="closeModal">&times;</span>
       <div class="modal__content">
+      <span class="close" @click="closeModal">&times;</span>
         <canvas ref="canvas" class="modal__canvas"></canvas>
         <!-- Редактируемый текст -->
         <div v-if="isModalOpen" ref="editableText" class="editable-text" :style="{
@@ -53,12 +53,13 @@
              @blur="saveText">
           {{ phrase }}
         </div>
-      </div>
       <div class="font-size-controls">
         <button @click="decreaseFontSize">Уменьшить шрифт</button>
-        <span>Размер шрифта: {{ fontSize }}px</span>
+        <span class="fontDisplay">Размер шрифта: {{ fontSize }}px</span>
         <button @click="increaseFontSize">Увеличить шрифт</button>
       </div>
+      </div>
+      <div class="modal__backdrop" @click="closeModal"></div>
     </div>
   </div>
 </template>
@@ -245,6 +246,7 @@ export default {
       this.selectedImageIndex = index; // Сохраняем индекс выбранной картинки
       this.selectedImage = this.images[index].bigSrc;
       this.isModalOpen = true;
+      document.body.style.overflow = "hidden"; // Отключаем прокрутку фона
       this.$nextTick(() => {
         this.canvas = this.$refs.canvas;
         if (this.canvas) {
@@ -283,6 +285,7 @@ export default {
     },
     closeModal() {
       this.isModalOpen = false;
+      document.body.style.overflow = ""; // Включаем прокрутку фона
     },
     startDragging(e) {
       this.isDragging = true;
@@ -348,78 +351,88 @@ export default {
   font-style: normal;
 }
 
+.modal__backdrop {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  top: 0;
+  left: 0;
+  z-index: 1;
+  pointer-events: auto;
+}
 
 .modal__content {
-  position: relative;
+  position: absolute;
   background-color: white;
-  /* padding: 20px; */
-  /* border-radius: 10px; */
   border: 1px solid black;
+  z-index: 2;
+  padding: 20px;
+  border-radius: 8px;
 }
 
 .modal__canvas {
   display: block;
   border: 1px solid #000000;
-  /* max-width: 90%;
-  max-height: 90%; */
   padding: 0;
   margin: 0;
-
 }
 
 .modal {
+  display: flex;
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(255, 255, 255, 0.5);
-  display: flex;
+  background-color: transparent;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  padding: 20px;
+  gap: 10px;
   z-index: 1000;
 }
 
 .editable-text {
   position: absolute;
-  /* font-size: 30px;
-  font-family: Arial, sans-serif;
-  color: white; */
   cursor: move;
   user-select: none;
   background-color: transparent;
   border: none;
   outline: none;
-  position: absolute;
   color: white;
-  /* color */
   text-align: center;
-  /* text-align */
   font-family: "OnePhraseFont", "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
-  /* font-family */
   font-size: 32px;
-  /* font-size */
   font-style: normal;
-  /* font-style */
   font-weight: 400;
-  /* font-weight */
   line-height: 115%;
-  /* line-height */
   letter-spacing: 0.64px;
-  /* letter-spacing */
   cursor: move;
   user-select: none;
   background-color: transparent;
   border: none;
   outline: none;
   white-space: pre-line;
-  /* Отображает переносы строк */
-
-
 }
 
 .close {
-  justify-self: left;
+  //justify-self: left;
+  position: relative;
+  z-index: 300;
+  margin: 0;
+  padding: 0;
+  //align-self: flex-start;
+}
+
+.font-size-controls {
+  display: flex;
+  gap: 5px;
+  position: relative;
+  z-index: 2;
+}
+.fontDisplay {
+  color: black;
 }
 </style>
