@@ -147,14 +147,6 @@ export default {
     updateText(e) {
       // При вводе текста сохраняем HTML с тегами <br> для переноса строк
       this.phrase = e.target.innerHTML;
-      this.$nextTick(() => {
-        const editableEl = this.$refs.editableText;
-        const canvasRect = this.canvas.getBoundingClientRect();
-        const textRect = editableEl.getBoundingClientRect();
-        const newTextX = (this.canvas.width - textRect.width) / 2;
-        this.textX = newTextX;
-        this.imagesTextCoordinates[this.selectedImageIndex].x = newTextX;
-      });
     },
     handleKeyDown(e) {
       if (e.key === 'Enter') {
