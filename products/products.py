@@ -1,3 +1,4 @@
+from copy import deepcopy
 from datetime import datetime as dt
 import json
 import logging
@@ -210,8 +211,17 @@ def generate_images(data: dict) -> ProductData:
     return product_data
 
 
+def add_additional_products(data):
+    product_list = data['items']
+    tshirt_trueover = next((item for item in product_list if item.get('product') == 'tshirt-trueover.png'), None)
+    trueover_100 = deepcopy(tshirt_trueover)
+    trueover_100['product'] = 'tshirt-trueover100'
+    product_list.append(trueover_100)
+
+
 @celery.task()
 def generate_product_xlsx(data):
+    add_additional_products(data)
     product_data = generate_images(data)
     product = Products(product_data)
     product.generate_xlsx()
