@@ -103,8 +103,8 @@ export default {
     };
   },
   methods: {
-    generateFile() {
-      const currentPhraseData = {
+    createCurrentPhraseData() {
+      return {
         items: this.images.map((image, index) => ({
           product: image.src,
           coordinates: this.imagesTextCoordinates[index],
@@ -115,24 +115,24 @@ export default {
         design_number: this.designNumber,
         text: this.phrase
       };
-
-      const exists = this.phrasesDataList.some(
-        item => JSON.stringify(item) === JSON.stringify(currentPhraseData)
+          },
+    isDuplicate(data) {
+      return this.phrasesDataList.some(
+        item => JSON.stringify(item) === JSON.stringify(data)
       );
-
-      if (!exists) {
+    },
+    generateFile() {
+      const currentPhraseData = this.createCurrentPhraseData();
+      if (!this.isDuplicate(currentPhraseData)) {
         this.phrasesDataList.push(currentPhraseData);
       }
-
-      // Отправляем весь список на сервер
-      const productsData = this.phrasesDataList;
 
       fetch('/api/products/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(productsData),
+        body: JSON.stringify(this.phrasesDataList),
       });
     },
     showGeneratedData(data) {
@@ -187,31 +187,14 @@ export default {
       this.phrasesDataList = [];
     },
     addPhrase() {
-      // Создаем данные текущей фразы
-      const currentPhraseData = {
-        items: this.images.map((image, index) => ({
-          product: image.src,
-          coordinates: this.imagesTextCoordinates[index],
-          fontSize: this.imagesFontSizes[index],
-        })),
-        category_1: this.categories[0],
-        category_2: this.categories[1],
-        design_number: this.designNumber,
-        text: this.phrase
-      };
+      const currentPhraseData = this.createCurrentPhraseData();
 
-
-
-      const exists = this.phrasesDataList.some(
-        item => JSON.stringify(item) === JSON.stringify(currentPhraseData)
-      );
-
-      if (!exists) {
+      if (!this.isDuplicate(currentPhraseData)) {
         this.phrasesDataList.push(currentPhraseData);
+        this.phraseCount++;
       }
 
-      // Увеличиваем счётчик и очищаем поля
-      this.phraseCount++;
+      this.phraseCount = this.phrasesDataList.length;
       this.phrase = "";
       this.designNumber = "";
       this.categories = ["", ""];
