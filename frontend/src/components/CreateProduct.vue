@@ -122,9 +122,11 @@ export default {
       );
     },
     generateFile() {
-      const currentPhraseData = this.createCurrentPhraseData();
-      if (!this.isDuplicate(currentPhraseData)) {
-        this.phrasesDataList.push(currentPhraseData);
+      if (this.phrase.trim()) {
+        const currentPhraseData = this.createCurrentPhraseData();
+        if (!this.isDuplicate(currentPhraseData)) {
+          this.phrasesDataList.push(currentPhraseData);
+        }
       }
 
       fetch('/api/products/generate', {
