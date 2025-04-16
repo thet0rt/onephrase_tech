@@ -5,6 +5,7 @@ import logging
 import os
 from typing import List
 from uuid import UUID, uuid4
+import csv
 
 import gspread
 from gspread import Spreadsheet
@@ -216,6 +217,20 @@ def generate_xlsx(rows):
     log.info(f"Данные сохранены в {filename}")
 
 
+def generate_csv(rows):
+    moscow_tz = pytz.timezone("Europe/Moscow")
+    current_time = dt.now(moscow_tz).strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f"table_{current_time}.csv"
+    filepath = os.path.join(XLSX_FILES_DIR, filename)
+
+    with open(filepath, mode="w", newline='', encoding="utf-8-sig") as file:
+        writer = csv.writer(file, delimiter=",", quoting=csv.QUOTE_ALL)
+        for row in rows:
+            writer.writerow(row)
+
+    log.info(f"CSV файл сохранён в {filename}")
+
+
 def add_additional_products(data):
     product_list = data['items']
     tshirt_trueover = next((item for item in product_list if item.get('product') == 'tshirt-trueover.png'), None)
@@ -233,6 +248,6 @@ def generate_product_xlsx(items):
         product = Products(product_data)
         new_rows = product.generate_xlsx(i)
         rows = rows + new_rows
-    generate_xlsx(rows)
+    generate_csv(rows)
     log.info("Products file generated sucessfully")
     return 200, "Products file generated sucessfully"
