@@ -224,11 +224,11 @@ def generate_csv(rows):
     filepath = os.path.join(XLSX_FILES_DIR, filename)
 
     with open(filepath, mode="w", newline='', encoding="utf-8-sig") as file:
-        writer = csv.writer(file, delimiter=",", quoting=csv.QUOTE_ALL)
+        writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         for row in rows:
             writer.writerow(row)
 
-    log.info(f"CSV файл сохранён в {filename}")
+    print(f"CSV файл сохранён в {filename}")
 
 
 def add_additional_products(data):
