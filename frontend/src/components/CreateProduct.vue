@@ -142,23 +142,23 @@ export default {
         },
         body: JSON.stringify(this.phrasesDataList),
       })
-                .then(response => {
-                    if (!response.ok) {
-                        // Если ответ не 2xx, выбрасываем ошибку
-                        throw new Error('Ошибка при генерации файла');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log("Ответ от сервера:", data);
-                    // Показать alert при успешном ответе
-                    alert(data.message || "Процесс начат");
-                })
-                .catch(error => {
-                    console.error("Ошибка при отправке данных:", error);
-                    // Показать alert при ошибке
-                    alert("Ошибка при генерации файла");
-                });
+        .then(response => {
+          if (!response.ok) {
+            // Если ответ не 2xx, выбрасываем ошибку
+            throw new Error('Ошибка при генерации файла');
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log("Ответ от сервера:", data);
+          // Показать alert при успешном ответе
+          alert(data.message || "Процесс начат");
+        })
+        .catch(error => {
+          console.error("Ошибка при отправке данных:", error);
+          // Показать alert при ошибке
+          alert("Ошибка при генерации файла");
+        });
     },
     showGeneratedData(data) {
       // Преобразуем данные в строку для отображения
@@ -235,7 +235,7 @@ export default {
       this.edit = false;
     },
     decreaseFontSize() {
-      if (this.imagesFontSizes[this.selectedImageIndex] > 10) {  // Минимальный размер шрифта
+      if (this.imagesFontSizes[this.selectedImageIndex] > 2) {  // Минимальный размер шрифта
         this.imagesFontSizes[this.selectedImageIndex] -= 2;
         this.fontSize = this.imagesFontSizes[this.selectedImageIndex]; // Обновляем текущий размер шрифта
       }
