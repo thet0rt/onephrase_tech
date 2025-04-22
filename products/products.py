@@ -79,9 +79,9 @@ class Products:
     def get_category(self, category: str) -> str:
         if category:
             category_1 = self.product_data["category_1"]
-            category_1 = category_1 + '; ' if category_1 else category_1
+            category_1 = category_1 + '; ' if self.product_data["category_2"] else category_1
             category = category.replace(
-                "@category_1", f'{self.product_data["category_1"]}'
+                "@category_1", f'{category_1}'
             )
             category = category.replace(
                 "@category_2", f'{self.product_data["category_2"]}'
