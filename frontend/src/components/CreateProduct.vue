@@ -116,6 +116,7 @@ export default {
           product: image.src,
           coordinates: this.fixCoordinates(this.imagesTextCoordinates[index]),
           fontSize: this.imagesFontSizes[index],
+          textWidth: this.measureTextWidth(this.phrase, this.imagesFontSizes[index]),
         })),
         category_1: this.categories[0],
         category_2: this.categories[1],
