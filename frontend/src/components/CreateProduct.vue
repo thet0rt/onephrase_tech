@@ -445,7 +445,7 @@ export default {
   background-color: transparent;
   border: none;
   outline: none;
-  white-space: nowrap;
+  white-space: pre;
 }
 
 .close {
