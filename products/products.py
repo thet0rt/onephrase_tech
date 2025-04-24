@@ -1,11 +1,3 @@
-def measure_text_width(text: str, font) -> int:
-    dummy_img = Image.new("RGB", (2000, 500), (255, 255, 255))
-    draw = ImageDraw.Draw(dummy_img)
-    bbox = draw.textbbox((0, 0), text, font=font)
-    width = bbox[2] - bbox[0]
-    dummy_img.save('dummy_img.jpg', "JPEG", quality=85, optimize=True)
-    return width
-
 from copy import deepcopy
 from datetime import datetime as dt
 import json
@@ -190,19 +182,12 @@ def generate_images(data: dict) -> ProductData:
             else:
                 text_color = 'white'
 
-            text_width = measure_text_width(text, font)
-            text_width_test = font.getlength(text)
-            # print(f"Text width: {text_width_test} pixels (using font.getlength)")
-            # print(f"Text width: {text_width} pixels (using another method)")
-            # front_text_width = item['textWidth']
-            # print(f"Front text width: {front_text_width*2} pixels")
-            # difference = int((front_text_width*2- text_width)/2)
             print(product)
             print(x)
             print(y)
             print(font_size)
             print(text)
-            draw.text((x-30, y), text, fill=text_color, font=font)
+            draw.text((x-30, y), text, fill=text_color, font=font, align="center")
             # draw.text((x*2, y*2), text, fill=text_color, font=font)
 
             # width, height = image.size
