@@ -44,14 +44,20 @@
         <span class="close" @click="closeModal">&times;</span>
         <canvas ref="canvas" class="modal__canvas"></canvas>
         <!-- Редактируемый текст -->
-        <div v-if="isModalOpen" ref="editableText" class="editable-text" :style="{
-                    left: textX + 'px',
-                    top: textY + 'px',
-                    fontSize: fontSize + 'px'
-                }" contenteditable="true" @mousedown="startDragging" @input="updateText"
-             @keydown="handleKeyDown"
-             @blur="saveText">
-          {{ phrase }}
+        <div :style="{
+          transform: 'scale(0.5)',
+          transformOrigin: 'top left',
+          position: 'absolute',
+          left: textX * 0.5 + 'px',
+          top: textY * 0.5 + 'px'
+        }">
+          <div v-if="isModalOpen" ref="editableText" class="editable-text" :style="{
+                      fontSize: fontSize + 'px'
+                  }" contenteditable="true" @mousedown="startDragging" @input="updateText"
+               @keydown="handleKeyDown"
+               @blur="saveText">
+            {{ phrase }}
+          </div>
         </div>
         <div class="font-size-controls">
           <button @click="decreaseFontSize">Уменьшить шрифт</button>
@@ -314,9 +320,11 @@ export default {
       this.isDragging = true;
       // Получаем координаты canvas относительно окна браузера
       const rect = this.canvas.getBoundingClientRect();
-      // Рассчитываем смещение мыши относительно текста
-      this.dragOffsetX = e.clientX - rect.left - this.textX;
-      this.dragOffsetY = e.clientY - rect.top - this.textY;
+      // Масштаб canvas
+      const scale = 0.5;
+      // Рассчитываем смещение мыши относительно текста с учетом масштаба
+      this.dragOffsetX = (e.clientX - rect.left) / scale - this.textX;
+      this.dragOffsetY = (e.clientY - rect.top) / scale - this.textY;
 
       // Добавляем обработчики событий для перемещения и остановки
       document.addEventListener("mousemove", this.dragText);
@@ -327,15 +335,15 @@ export default {
 
       // Получаем координаты canvas относительно окна браузера
       const rect = this.canvas.getBoundingClientRect();
+      const scale = 0.5;
 
-      // Получаем координаты мыши внутри canvas
-      let newX = e.clientX - rect.left - this.dragOffsetX;
-      let newY = e.clientY - rect.top - this.dragOffsetY;
+      // Получаем координаты мыши внутри canvas с учетом масштаба
+      let newX = (e.clientX - rect.left) / scale - this.dragOffsetX;
+      let newY = (e.clientY - rect.top) / scale - this.dragOffsetY;
 
-      // Ограничиваем координаты в пределах canvas
+      // Можно оставить расчет ширины текста, если вдруг понадобится ограничивать по ширине
       const textWidth = this.ctx.measureText(this.phrase).width;
-
-      newY = Math.max(0, Math.min(this.canvas.height - 32, newY)); // Ограничиваем по высоте
+      // newY ограничивать не нужно, разрешаем перемещение по всей высоте
 
       this.textX = newX;
       this.textY = newY;
@@ -437,7 +445,7 @@ export default {
   background-color: transparent;
   border: none;
   outline: none;
-  white-space: pre-line;
+  white-space: nowrap;
 }
 
 .close {

@@ -1,3 +1,11 @@
+def measure_text_width(text: str, font) -> int:
+    dummy_img = Image.new("RGB", (2000, 500), (255, 255, 255))
+    draw = ImageDraw.Draw(dummy_img)
+    bbox = draw.textbbox((0, 0), text, font=font)
+    width = bbox[2] - bbox[0]
+    dummy_img.save('dummy_img.jpg', "JPEG", quality=85, optimize=True)
+    return width
+
 from copy import deepcopy
 from datetime import datetime as dt
 import json
@@ -171,7 +179,7 @@ def generate_images(data: dict) -> ProductData:
 
             try:
                 font = ImageFont.truetype(
-                    "products/assets/AvantGardeC_regular.otf", font_size*6
+                    "products/assets/AvantGardeC_regular.otf", font_size
                 )
             except IOError as exc:
                 log.error(exc)
@@ -182,15 +190,28 @@ def generate_images(data: dict) -> ProductData:
             else:
                 text_color = 'white'
 
-            draw.text((x*6, y*6), text, fill=text_color, font=font)
+            text_width = measure_text_width(text, font)
+            text_width_test = font.getlength(text)
+            # print(f"Text width: {text_width_test} pixels (using font.getlength)")
+            # print(f"Text width: {text_width} pixels (using another method)")
+            # front_text_width = item['textWidth']
+            # print(f"Front text width: {front_text_width*2} pixels")
+            # difference = int((front_text_width*2- text_width)/2)
+            print(product)
+            print(x)
+            print(y)
+            print(font_size)
+            print(text)
+            draw.text((x-30, y), text, fill=text_color, font=font)
+            # draw.text((x*2, y*2), text, fill=text_color, font=font)
 
-            width, height = image.size
-            new_width = int(width * 0.5)
-            new_height = int(height * 0.5)
-            image = image.resize((new_width, new_height))
+            # width, height = image.size
+            # new_width = int(width * 0.5)
+            # new_height = int(height * 0.5)
+            # image = image.resize((new_width, new_height))
             image.save(output_path, "JPEG", quality=85, optimize=True)
             link_name = f"{product}_{color}"
-            link = f'{os.getenv("SERVICE_URL")}/api/products/download_img/{filename}'  # todo create endpoint for downloading this
+            link = f'{os.getenv("SERVICE_URL")}/api/products/download_img/{filename}'
             links[link_name] = link
             results.append({"product": product, "output": output_path})
     product_data = dict(
@@ -207,7 +228,7 @@ def generate_xlsx(rows):
     ws = wb.active
     ws.title = "Таблица"
     for row in rows:
-        print(row)
+        # print(row)
         ws.append(row)
 
     moscow_tz = pytz.timezone("Europe/Moscow")
@@ -228,7 +249,7 @@ def generate_csv(rows):
         writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         for row in rows:
             row += [""] * (len(header) - len(row))
-            print(len(row))
+            # print(len(row))
             writer.writerow(row)
 
     print(f"CSV файл сохранён в {filename}")
