@@ -94,7 +94,7 @@ export default {
         {x: 180, y: 365},
         {x: 185, y: 300}
       ],
-      imagesFontSizes: [20, 20, 14, 20, 16], // Начальные размеры шрифта для каждой картинки
+      imagesFontSizes: [40, 40, 28, 40, 32], // Начальные размеры шрифта для каждой картинки
       selectedImageIndex: null, // Индекс выбранной картинки
       isModalOpen: false,
       selectedImage: "",
