@@ -44,14 +44,20 @@
         <span class="close" @click="closeModal">&times;</span>
         <canvas ref="canvas" class="modal__canvas"></canvas>
         <!-- Редактируемый текст -->
-        <div v-if="isModalOpen" ref="editableText" class="editable-text" :style="{
-                    left: textX + 'px',
-                    top: textY + 'px',
-                    fontSize: fontSize + 'px'
-                }" contenteditable="true" @mousedown="startDragging" @input="updateText"
-             @keydown="handleKeyDown"
-             @blur="saveText">
-          {{ phrase }}
+        <div :style="{
+          transform: 'scale(0.5)',
+          transformOrigin: 'top left',
+          position: 'absolute',
+          left: textX * 0.5 + 'px',
+          top: textY * 0.5 + 'px'
+        }">
+          <div v-if="isModalOpen" ref="editableText" class="editable-text" :style="{
+                      fontSize: fontSize + 'px'
+                  }" contenteditable="true" @mousedown="startDragging" @input="updateText"
+               @keydown="handleKeyDown"
+               @blur="saveText">
+            {{ phrase }}
+          </div>
         </div>
         <div class="font-size-controls">
           <button @click="decreaseFontSize">Уменьшить шрифт</button>
@@ -82,13 +88,13 @@ export default {
         {src: "tshirt-trueover.png", bigSrc: "tshirt-trueover_big.png"}
       ],
       imagesTextCoordinates: [
-        {x: 188, y: 409},
-        {x: 180, y: 394},
-        {x: 185, y: 316},
-        {x: 180, y: 365},
-        {x: 185, y: 300}
+        {x: 188, y: 809},
+        {x: 180, y: 788},
+        {x: 185, y: 632},
+        {x: 180, y: 730},
+        {x: 185, y: 600}
       ],
-      imagesFontSizes: [20, 20, 14, 20, 16], // Начальные размеры шрифта для каждой картинки
+      imagesFontSizes: [40, 40, 28, 40, 32], // Начальные размеры шрифта для каждой картинки
       selectedImageIndex: null, // Индекс выбранной картинки
       isModalOpen: false,
       selectedImage: "",
@@ -116,6 +122,7 @@ export default {
           product: image.src,
           coordinates: this.fixCoordinates(this.imagesTextCoordinates[index]),
           fontSize: this.imagesFontSizes[index],
+          textWidth: this.measureTextWidth(this.phrase, this.imagesFontSizes[index]),
         })),
         category_1: this.categories[0],
         category_2: this.categories[1],
@@ -142,23 +149,23 @@ export default {
         },
         body: JSON.stringify(this.phrasesDataList),
       })
-                .then(response => {
-                    if (!response.ok) {
-                        // Если ответ не 2xx, выбрасываем ошибку
-                        throw new Error('Ошибка при генерации файла');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log("Ответ от сервера:", data);
-                    // Показать alert при успешном ответе
-                    alert(data.message || "Процесс начат");
-                })
-                .catch(error => {
-                    console.error("Ошибка при отправке данных:", error);
-                    // Показать alert при ошибке
-                    alert("Ошибка при генерации файла");
-                });
+        .then(response => {
+          if (!response.ok) {
+            // Если ответ не 2xx, выбрасываем ошибку
+            throw new Error('Ошибка при генерации файла');
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log("Ответ от сервера:", data);
+          // Показать alert при успешном ответе
+          alert(data.message || "Процесс начат");
+        })
+        .catch(error => {
+          console.error("Ошибка при отправке данных:", error);
+          // Показать alert при ошибке
+          alert("Ошибка при генерации файла");
+        });
     },
     showGeneratedData(data) {
       // Преобразуем данные в строку для отображения
@@ -172,11 +179,11 @@ export default {
       this.phrase = e.target.innerHTML;
       this.$nextTick(() => {
         const editableEl = this.$refs.editableText;
-        const canvasRect = this.canvas.getBoundingClientRect();
-        const textRect = editableEl.getBoundingClientRect();
+        // const canvasRect = this.canvas.getBoundingClientRect();
+        // const textRect = editableEl.getBoundingClientRect();
         console.log(this.canvas.width)
-        const newTextX = (540 - textRect.width) / 2;
-        this.textX = newTextX;
+        // const newTextX = (540 - textRect.width) / 2;
+        // this.textX = newTextX;
         this.imagesTextCoordinates = this.imagesTextCoordinates.map(coord => ({
           ...coord,
           x: newTextX
@@ -204,7 +211,7 @@ export default {
     recalculateAllTextX() {
       this.imagesTextCoordinates = this.imagesFontSizes.map((fontSize, index) => {
         const width = this.measureTextWidth(this.phrase, fontSize);
-        const newX = (600 - width) / 2;
+        const newX = (1200 - width) / 2;
         return {
           ...this.imagesTextCoordinates[index],
           x: newX
@@ -235,7 +242,7 @@ export default {
       this.edit = false;
     },
     decreaseFontSize() {
-      if (this.imagesFontSizes[this.selectedImageIndex] > 10) {  // Минимальный размер шрифта
+      if (this.imagesFontSizes[this.selectedImageIndex] > 2) {  // Минимальный размер шрифта
         this.imagesFontSizes[this.selectedImageIndex] -= 2;
         this.fontSize = this.imagesFontSizes[this.selectedImageIndex]; // Обновляем текущий размер шрифта
       }
@@ -313,9 +320,11 @@ export default {
       this.isDragging = true;
       // Получаем координаты canvas относительно окна браузера
       const rect = this.canvas.getBoundingClientRect();
-      // Рассчитываем смещение мыши относительно текста
-      this.dragOffsetX = e.clientX - rect.left - this.textX;
-      this.dragOffsetY = e.clientY - rect.top - this.textY;
+      // Масштаб canvas
+      const scale = 0.5;
+      // Рассчитываем смещение мыши относительно текста с учетом масштаба
+      this.dragOffsetX = (e.clientX - rect.left) / scale - this.textX;
+      this.dragOffsetY = (e.clientY - rect.top) / scale - this.textY;
 
       // Добавляем обработчики событий для перемещения и остановки
       document.addEventListener("mousemove", this.dragText);
@@ -326,15 +335,15 @@ export default {
 
       // Получаем координаты canvas относительно окна браузера
       const rect = this.canvas.getBoundingClientRect();
+      const scale = 0.5;
 
-      // Получаем координаты мыши внутри canvas
-      let newX = e.clientX - rect.left - this.dragOffsetX;
-      let newY = e.clientY - rect.top - this.dragOffsetY;
+      // Получаем координаты мыши внутри canvas с учетом масштаба
+      let newX = (e.clientX - rect.left) / scale - this.dragOffsetX;
+      let newY = (e.clientY - rect.top) / scale - this.dragOffsetY;
 
-      // Ограничиваем координаты в пределах canvas
+      // Можно оставить расчет ширины текста, если вдруг понадобится ограничивать по ширине
       const textWidth = this.ctx.measureText(this.phrase).width;
-
-      newY = Math.max(0, Math.min(this.canvas.height - 32, newY)); // Ограничиваем по высоте
+      // newY ограничивать не нужно, разрешаем перемещение по всей высоте
 
       this.textX = newX;
       this.textY = newY;
@@ -436,7 +445,7 @@ export default {
   background-color: transparent;
   border: none;
   outline: none;
-  white-space: pre-line;
+  white-space: pre;
 }
 
 .close {

@@ -10,7 +10,8 @@ class TextOverlaySchema(Schema):
     product = fields.Str(required=True)
     coordinates = fields.Nested(CoordinatesSchema, required=True)
     fontSize = fields.Int(required=True)
-    
+    textWidth = fields.Float(required=True)
+
 
 class ImageRequestSchema(Schema):
     items = fields.List(fields.Nested(TextOverlaySchema), required=True)

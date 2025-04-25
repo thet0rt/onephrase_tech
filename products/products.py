@@ -79,9 +79,9 @@ class Products:
     def get_category(self, category: str) -> str:
         if category:
             category_1 = self.product_data["category_1"]
-            category_1 = category_1 + '; ' if category_1 else category_1
+            category_1 = category_1 + '; ' if self.product_data["category_2"] else category_1
             category = category.replace(
-                "@category_1", f'{self.product_data["category_1"]}'
+                "@category_1", f'{category_1}'
             )
             category = category.replace(
                 "@category_2", f'{self.product_data["category_2"]}'
@@ -171,7 +171,7 @@ def generate_images(data: dict) -> ProductData:
 
             try:
                 font = ImageFont.truetype(
-                    "products/assets/AvantGardeC_regular.otf", font_size*6
+                    "products/assets/AvantGardeC_regular.otf", font_size
                 )
             except IOError as exc:
                 log.error(exc)
@@ -182,15 +182,21 @@ def generate_images(data: dict) -> ProductData:
             else:
                 text_color = 'white'
 
-            draw.text((x*6, y*6), text, fill=text_color, font=font)
+            print(product)
+            print(x)
+            print(y)
+            print(font_size)
+            print(text)
+            draw.text((x-30, y), text, fill=text_color, font=font, align="center")
+            # draw.text((x*2, y*2), text, fill=text_color, font=font)
 
-            width, height = image.size
-            new_width = int(width * 0.5)
-            new_height = int(height * 0.5)
-            image = image.resize((new_width, new_height))
+            # width, height = image.size
+            # new_width = int(width * 0.5)
+            # new_height = int(height * 0.5)
+            # image = image.resize((new_width, new_height))
             image.save(output_path, "JPEG", quality=85, optimize=True)
             link_name = f"{product}_{color}"
-            link = f'{os.getenv("SERVICE_URL")}/api/products/download_img/{filename}'  # todo create endpoint for downloading this
+            link = f'{os.getenv("SERVICE_URL")}/api/products/download_img/{filename}'
             links[link_name] = link
             results.append({"product": product, "output": output_path})
     product_data = dict(
@@ -207,7 +213,7 @@ def generate_xlsx(rows):
     ws = wb.active
     ws.title = "Таблица"
     for row in rows:
-        print(row)
+        # print(row)
         ws.append(row)
 
     moscow_tz = pytz.timezone("Europe/Moscow")
@@ -228,7 +234,7 @@ def generate_csv(rows):
         writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         for row in rows:
             row += [""] * (len(header) - len(row))
-            print(len(row))
+            # print(len(row))
             writer.writerow(row)
 
     print(f"CSV файл сохранён в {filename}")
