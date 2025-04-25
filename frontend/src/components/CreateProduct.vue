@@ -88,11 +88,11 @@ export default {
         {src: "tshirt-trueover.png", bigSrc: "tshirt-trueover_big.png"}
       ],
       imagesTextCoordinates: [
-        {x: 188, y: 409},
-        {x: 180, y: 394},
-        {x: 185, y: 316},
-        {x: 180, y: 365},
-        {x: 185, y: 300}
+        {x: 188, y: 809},
+        {x: 180, y: 788},
+        {x: 185, y: 632},
+        {x: 180, y: 730},
+        {x: 185, y: 600}
       ],
       imagesFontSizes: [40, 40, 28, 40, 32], // Начальные размеры шрифта для каждой картинки
       selectedImageIndex: null, // Индекс выбранной картинки
@@ -179,11 +179,11 @@ export default {
       this.phrase = e.target.innerHTML;
       this.$nextTick(() => {
         const editableEl = this.$refs.editableText;
-        const canvasRect = this.canvas.getBoundingClientRect();
-        const textRect = editableEl.getBoundingClientRect();
+        // const canvasRect = this.canvas.getBoundingClientRect();
+        // const textRect = editableEl.getBoundingClientRect();
         console.log(this.canvas.width)
-        const newTextX = (540 - textRect.width) / 2;
-        this.textX = newTextX;
+        // const newTextX = (540 - textRect.width) / 2;
+        // this.textX = newTextX;
         this.imagesTextCoordinates = this.imagesTextCoordinates.map(coord => ({
           ...coord,
           x: newTextX
@@ -211,7 +211,7 @@ export default {
     recalculateAllTextX() {
       this.imagesTextCoordinates = this.imagesFontSizes.map((fontSize, index) => {
         const width = this.measureTextWidth(this.phrase, fontSize);
-        const newX = (600 - width) / 2;
+        const newX = (1200 - width) / 2;
         return {
           ...this.imagesTextCoordinates[index],
           x: newX
