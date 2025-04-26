@@ -181,19 +181,8 @@ def generate_images(data: dict) -> ProductData:
                 text_color = '#222222'
             else:
                 text_color = 'white'
-
-            print(product)
-            print(x)
-            print(y)
-            print(font_size)
-            print(text)
-            draw.text((x-30, y), text, fill=text_color, font=font, align="center")
-            # draw.text((x*2, y*2), text, fill=text_color, font=font)
-
-            # width, height = image.size
-            # new_width = int(width * 0.5)
-            # new_height = int(height * 0.5)
-            # image = image.resize((new_width, new_height))
+            draw.text((x-30, y-30), text, fill=text_color, font=font, align="center")
+            # draw_text_with_precision(x-30, y-30, text, image, text_color)
             image.save(output_path, "JPEG", quality=85, optimize=True)
             link_name = f"{product}_{color}"
             link = f'{os.getenv("SERVICE_URL")}/api/products/download_img/{filename}'
@@ -260,3 +249,89 @@ def generate_product_xlsx(items):
     generate_csv(rows)
     log.info("Products file generated sucessfully")
     return 200, "Products file generated sucessfully"
+
+#
+# import cairo
+# import gi
+# gi.require_version('Pango', '1.0')
+# gi.require_version('PangoCairo', '1.0')
+# from gi.repository import Pango, PangoCairo
+#
+# import os
+#
+# def draw_text_with_cairo(
+#     text: str,
+#     font_path: str,
+#     font_size: int = 32,
+#     line_height: float = 1.0,
+#     letter_spacing: int = 0,
+#     text_color: str = "#FFFFFF",
+#     bg_color: str = "#000000",
+#     output_path: str = "output.png",
+#     surface_width: int = 500,
+#     surface_height: int = 200
+# ):
+#     # Проверяем что шрифт существует
+#     if not os.path.exists(font_path):
+#         raise FileNotFoundError(f"Font file not found: {font_path}")
+#
+#     # Создаем поверхность
+#     surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, surface_width, surface_height)
+#     ctx = cairo.Context(surface)
+#
+#     # Фон
+#     bg_r, bg_g, bg_b = hex_to_rgb(bg_color)
+#     ctx.set_source_rgb(bg_r, bg_g, bg_b)
+#     ctx.paint()
+#
+#     # Создаем Pango контекст
+#     layout = PangoCairo.create_layout(ctx)
+#
+#     # Настройка шрифта через FontDescription
+#     font_desc = Pango.FontDescription()
+#     font_name = load_font_to_system(font_path)
+#     font_desc.set_family(font_name)
+#     font_desc.set_absolute_size(font_size * Pango.SCALE)
+#     layout.set_font_description(font_desc)
+#
+#     # Настройка текста
+#     layout.set_text(text, -1)
+#
+#     # Letter-spacing
+#     attrs = Pango.AttrList()
+#     if letter_spacing:
+#         attr = Pango.attr_letter_spacing_new(letter_spacing * Pango.SCALE)  # Pango масштабирует
+#         attrs.insert(attr)
+#     layout.set_attributes(attrs)
+#
+#     # Line-spacing (Pango не очень удобно поддерживает line_height напрямую)
+#     # Можно частично управлять вручную через разбивку текста
+#
+#     # Цвет текста
+#     text_r, text_g, text_b = hex_to_rgb(text_color)
+#     ctx.set_source_rgb(text_r, text_g, text_b)
+#
+#     # Позиция (пока фиксированная, можно тоже параметризовать)
+#     x, y = 50, 50
+#     ctx.move_to(x, y)
+#
+#     # Рендер
+#     PangoCairo.show_layout(ctx, layout)
+#
+#     # Сохраняем
+#     surface.write_to_png(output_path)
+#
+# def load_font_to_system(font_path: str) -> str:
+#     """
+#     Регистрация шрифта во временной Fontconfig конфигурации.
+#     WARNING: Pango по-простому НЕ умеет грузить TTF напрямую, ему нужно имя шрифта.
+#     Поэтому тут предполагаем, что у тебя название файла примерно совпадает с font-family.
+#     """
+#     font_name = os.path.splitext(os.path.basename(font_path))[0]
+#     return font_name
+#
+# def hex_to_rgb(hex_color: str):
+#     """Преобразование HEX в нормализованные значения RGB"""
+#     hex_color = hex_color.lstrip('#')
+#     lv = len(hex_color)
+#     return tuple(int(hex_color[i:i + lv // 3], 16) / 255.0 for i in range(0, lv, lv // 3))

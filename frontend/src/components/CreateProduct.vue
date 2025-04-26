@@ -438,8 +438,8 @@ export default {
   font-size: 32px;
   font-style: normal;
   font-weight: 400;
-  line-height: 115%;
-  letter-spacing: 0.64px;
+  line-height: 85%;
+  letter-spacing: 0px;
   cursor: move;
   user-select: none;
   background-color: transparent;
