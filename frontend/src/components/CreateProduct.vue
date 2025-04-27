@@ -332,7 +332,8 @@ export default {
       tempDiv.style.backgroundColor = 'transparent';
       tempDiv.style.fontFamily = 'OnePhraseFont';
       tempDiv.style.whiteSpace = 'pre-wrap';
-      tempDiv.style.lineHeight = '0.85';
+      tempDiv.style.lineHeight = '110%';
+      tempDiv.style.letterSpacing = '0.7px';
       document.body.appendChild(tempDiv);
 
       for (const phraseData of this.phrasesDataList) {
@@ -342,7 +343,7 @@ export default {
 
           const canvas = await html2canvas(tempDiv, {
             backgroundColor: null,
-            scale: 1,
+            scale: 2,
             useCORS: true
           });
 
@@ -497,8 +498,8 @@ export default {
   font-size: 32px;
   font-style: normal;
   font-weight: 400;
-  line-height: 85%;
-  letter-spacing: 0px;
+  line-height: 110%;
+  letter-spacing: 0.7px;
   cursor: move;
   user-select: none;
   background-color: transparent;

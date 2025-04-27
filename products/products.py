@@ -176,10 +176,9 @@ def generate_images(data: dict) -> ProductData:
                     decoded = base64.b64decode(encoded)
                     text_overlay = Image.open(io.BytesIO(decoded)).convert("RGBA")
 
-                    # # Уменьшаем изображение в 2 раза
-                    # new_size = (text_overlay.width // 2, text_overlay.height // 2)
-                    # text_overlay = text_overlay.resize(new_size, Image.ANTIALIAS)
-
+                    # Уменьшаем изображение в 2 раза
+                    new_size = (text_overlay.width // 2, text_overlay.height // 2)
+                    text_overlay = text_overlay.resize(new_size, Image.Resampling.LANCZOS)
                     image.paste(text_overlay, (x-30, y-30), text_overlay)
                     text_overlay.save('./test.png')
                 except Exception as e:
