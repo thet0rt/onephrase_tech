@@ -11,6 +11,7 @@ class TextOverlaySchema(Schema):
     coordinates = fields.Nested(CoordinatesSchema, required=True)
     fontSize = fields.Int(required=True)
     textWidth = fields.Float(required=True)
+    text_image = fields.Str(required=False)
 
 
 class ImageRequestSchema(Schema):

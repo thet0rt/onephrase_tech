@@ -6,6 +6,8 @@ import os
 from typing import List
 from uuid import UUID, uuid4
 import csv
+import base64
+import io
 
 import gspread
 from gspread import Spreadsheet
@@ -145,6 +147,7 @@ def generate_images(data: dict) -> ProductData:
         product = item["product"].split(".")[0]
         x, y = item["coordinates"]["x"], item["coordinates"]["y"]
         font_size = item["fontSize"]
+        text_image_base64 = item.get("text_image")
 
         folder_path = f"{UNPROCESSED_DIR}/{product}"
         objects = os.listdir(folder_path)
@@ -167,21 +170,29 @@ def generate_images(data: dict) -> ProductData:
                 log.error(f"Файл {product} не найден")
 
             image = Image.open(input_path)
-            draw = ImageDraw.Draw(image)
-
-            try:
-                font = ImageFont.truetype(
-                    "products/assets/AvantGardeC_regular.otf", font_size
-                )
-            except IOError as exc:
-                log.error(exc)
-                font = ImageFont.load_default()
-
-            if (product, color) in BLACK_COLOR_ITEMS:
-                text_color = '#222222'
+            if text_image_base64:
+                try:
+                    header, encoded = text_image_base64.split(",", 1)
+                    decoded = base64.b64decode(encoded)
+                    text_overlay = Image.open(io.BytesIO(decoded)).convert("RGBA")
+                    image.paste(text_overlay, (x-30, y-30), text_overlay)
+                except Exception as e:
+                    log.error(f"Ошибка при наложении текстового изображения: {e}")
             else:
-                text_color = 'white'
-            draw.text((x-30, y-30), text, fill=text_color, font=font, align="center")
+                draw = ImageDraw.Draw(image)
+                try:
+                    font = ImageFont.truetype(
+                        "products/assets/AvantGardeC_regular.otf", font_size
+                    )
+                except IOError as exc:
+                    log.error(exc)
+                    font = ImageFont.load_default()
+
+                if (product, color) in BLACK_COLOR_ITEMS:
+                    text_color = '#222222'
+                else:
+                    text_color = 'white'
+                draw.text((x-30, y-30), text, fill=text_color, font=font, align="center")
             # draw_text_with_precision(x-30, y-30, text, image, text_color)
             image.save(output_path, "JPEG", quality=85, optimize=True)
             link_name = f"{product}_{color}"
