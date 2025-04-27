@@ -72,6 +72,8 @@
 
 
 <script>
+import html2canvas from 'html2canvas';
+
 export default {
   data() {
     return {
@@ -135,13 +137,16 @@ export default {
         item => JSON.stringify(item) === JSON.stringify(data)
       );
     },
-    generateFile() {
+    async generateFile() {
       if (this.phrase.trim()) {
         const currentPhraseData = this.createCurrentPhraseData();
         if (!this.isDuplicate(currentPhraseData)) {
           this.phrasesDataList.push(currentPhraseData);
         }
       }
+
+      await this.generateTextImagesForPhrases();
+
       fetch('/api/products/generate', {
         method: 'POST',
         headers: {
@@ -151,19 +156,16 @@ export default {
       })
         .then(response => {
           if (!response.ok) {
-            // Если ответ не 2xx, выбрасываем ошибку
             throw new Error('Ошибка при генерации файла');
           }
           return response.json();
         })
         .then(data => {
           console.log("Ответ от сервера:", data);
-          // Показать alert при успешном ответе
           alert(data.message || "Процесс начат");
         })
         .catch(error => {
           console.error("Ошибка при отправке данных:", error);
-          // Показать alert при ошибке
           alert("Ошибка при генерации файла");
         });
     },
@@ -312,6 +314,55 @@ export default {
       };
       img.src = this.selectedImage;
     },
+    async generateTextImagesForPhrases() {
+      const tempDiv = document.createElement('div');
+      tempDiv.style.position = 'absolute';
+      tempDiv.style.left = '-9999px';
+      tempDiv.style.top = '0';
+      tempDiv.style.width = '600px';
+      // // Центрирование текста физически через flexbox
+      tempDiv.style.display = 'flex';
+      tempDiv.style.justifyContent = 'left';
+      tempDiv.style.alignItems = 'center';
+      tempDiv.style.textAlign = 'center';
+      tempDiv.style.height = 'auto';
+      tempDiv.style.padding = '0';
+      tempDiv.style.margin = '0';
+      tempDiv.style.color = 'white';
+      tempDiv.style.backgroundColor = 'transparent';
+      tempDiv.style.fontFamily = 'OnePhraseFont';
+      tempDiv.style.whiteSpace = 'pre-wrap';
+      tempDiv.style.lineHeight = '110%';
+      tempDiv.style.letterSpacing = '0.7px';
+      document.body.appendChild(tempDiv);
+
+      for (const phraseData of this.phrasesDataList) {
+        for (const item of phraseData.items) {
+          tempDiv.style.fontSize = `${item.fontSize}px`;
+          tempDiv.innerText = phraseData.text;
+
+          const canvas = await html2canvas(tempDiv, {
+            backgroundColor: null,
+            scale: 2,
+            useCORS: true
+          });
+
+          const imageDataURL = canvas.toDataURL('image/png');
+
+          item.text_image = imageDataURL;
+        }
+      }
+
+      document.body.removeChild(tempDiv);
+    },
+    downloadImage(dataURL, filename) {
+      const link = document.createElement('a');
+      link.href = dataURL;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    },
     closeModal() {
       this.isModalOpen = false;
       document.body.style.overflow = ""; // Включаем прокрутку фона
@@ -349,7 +400,15 @@ export default {
       this.textY = newY;
 
       // Сохраняем новые координаты в объекте imagesTextCoordinates
+      // Теперь обновляем не только x и y, но и фиксируем координаты для текущего редактируемого блока
       this.imagesTextCoordinates[this.selectedImageIndex] = {x: this.textX, y: this.textY};
+      // Также обновим координаты для текущей фразы в phrasesDataList, если она есть
+      if (this.phrasesDataList.length > 0 && this.selectedImageIndex !== null) {
+        const lastPhrase = this.phrasesDataList[this.phrasesDataList.length - 1];
+        if (lastPhrase && lastPhrase.items && lastPhrase.items[this.selectedImageIndex]) {
+          lastPhrase.items[this.selectedImageIndex].coordinates = {x: this.textX - 30, y: this.textY - 30};
+        }
+      }
 
       console.log("textX:", this.textX, "textY:", this.textY);
     },
@@ -380,6 +439,7 @@ export default {
   src: url('@/assets/fonts/AvantGardeC_regular.otf') format('opentype');
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
 }
 
 .modal__backdrop {
@@ -438,8 +498,8 @@ export default {
   font-size: 32px;
   font-style: normal;
   font-weight: 400;
-  line-height: 85%;
-  letter-spacing: 0px;
+  line-height: 110%;
+  letter-spacing: 0.7px;
   cursor: move;
   user-select: none;
   background-color: transparent;
