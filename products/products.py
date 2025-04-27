@@ -175,7 +175,13 @@ def generate_images(data: dict) -> ProductData:
                     header, encoded = text_image_base64.split(",", 1)
                     decoded = base64.b64decode(encoded)
                     text_overlay = Image.open(io.BytesIO(decoded)).convert("RGBA")
+
+                    # # Уменьшаем изображение в 2 раза
+                    # new_size = (text_overlay.width // 2, text_overlay.height // 2)
+                    # text_overlay = text_overlay.resize(new_size, Image.ANTIALIAS)
+
                     image.paste(text_overlay, (x-30, y-30), text_overlay)
+                    text_overlay.save('./test.png')
                 except Exception as e:
                     log.error(f"Ошибка при наложении текстового изображения: {e}")
             else:
@@ -192,7 +198,7 @@ def generate_images(data: dict) -> ProductData:
                     text_color = '#222222'
                 else:
                     text_color = 'white'
-                draw.text((x-30, y-30), text, fill=text_color, font=font, align="center")
+                # draw.text((x-30, y-30), text, fill=text_color, font=font, align="center")
             # draw_text_with_precision(x-30, y-30, text, image, text_color)
             image.save(output_path, "JPEG", quality=85, optimize=True)
             link_name = f"{product}_{color}"

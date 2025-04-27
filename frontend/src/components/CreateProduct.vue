@@ -320,7 +320,14 @@ export default {
       tempDiv.style.left = '-9999px';
       tempDiv.style.top = '0';
       tempDiv.style.width = '600px';
+      // // Центрирование текста физически через flexbox
+      tempDiv.style.display = 'flex';
+      tempDiv.style.justifyContent = 'left';
+      tempDiv.style.alignItems = 'center';
       tempDiv.style.textAlign = 'center';
+      tempDiv.style.height = 'auto';
+      tempDiv.style.padding = '0';
+      tempDiv.style.margin = '0';
       tempDiv.style.color = 'white';
       tempDiv.style.backgroundColor = 'transparent';
       tempDiv.style.fontFamily = 'OnePhraseFont';
@@ -335,7 +342,7 @@ export default {
 
           const canvas = await html2canvas(tempDiv, {
             backgroundColor: null,
-            scale: 2,
+            scale: 1,
             useCORS: true
           });
 
