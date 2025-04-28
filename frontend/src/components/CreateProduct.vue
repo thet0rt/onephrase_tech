@@ -328,7 +328,6 @@ export default {
       tempDiv.style.height = 'auto';
       tempDiv.style.padding = '0';
       tempDiv.style.margin = '0';
-      tempDiv.style.color = 'white';
       tempDiv.style.backgroundColor = 'transparent';
       tempDiv.style.fontFamily = 'OnePhraseFont';
       tempDiv.style.whiteSpace = 'pre-wrap';
@@ -340,16 +339,22 @@ export default {
         for (const item of phraseData.items) {
           tempDiv.style.fontSize = `${item.fontSize}px`;
           tempDiv.innerText = phraseData.text;
-
-          const canvas = await html2canvas(tempDiv, {
+          // Белый вариант
+          tempDiv.style.color = 'white';
+          const canvasWhite = await html2canvas(tempDiv, {
             backgroundColor: null,
             scale: 2,
             useCORS: true
           });
-
-          const imageDataURL = canvas.toDataURL('image/png');
-
-          item.text_image = imageDataURL;
+          item.text_image_white = canvasWhite.toDataURL('image/png');
+          // Черный вариант
+          tempDiv.style.color = '#222222';
+          const canvasBlack = await html2canvas(tempDiv, {
+            backgroundColor: null,
+            scale: 2,
+            useCORS: true
+          });
+          item.text_image_black = canvasBlack.toDataURL('image/png');
         }
       }
 
