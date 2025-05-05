@@ -90,13 +90,13 @@ export default {
         {src: "tshirt-trueover.png", bigSrc: "tshirt-trueover_big.png"}
       ],
       imagesTextCoordinates: [
-        {x: 188, y: 809},
-        {x: 180, y: 788},
+        {x: 188, y: 894},
+        {x: 180, y: 872},
         {x: 185, y: 632},
-        {x: 180, y: 730},
+        {x: 180, y: 850},
         {x: 185, y: 600}
       ],
-      imagesFontSizes: [40, 40, 28, 40, 32], // Начальные размеры шрифта для каждой картинки
+      imagesFontSizes: [32, 32, 14, 34, 17], // Начальные размеры шрифта для каждой картинки
       selectedImageIndex: null, // Индекс выбранной картинки
       isModalOpen: false,
       selectedImage: "",
@@ -213,7 +213,19 @@ export default {
     recalculateAllTextX() {
       this.imagesTextCoordinates = this.imagesFontSizes.map((fontSize, index) => {
         const width = this.measureTextWidth(this.phrase, fontSize);
-        const newX = (1200 - width) / 2;
+        let newX = (1200 - width) / 2;
+
+        const product = this.images[index].src;
+        if (product.includes('hoodie')) {
+          newX -= 5;
+        }
+        if (product.includes('tshirt-basic')) {
+          newX -= 22;
+        }
+        if (product.includes('tshirt-trueover')) {
+          newX -= 5;
+        }
+
         return {
           ...this.imagesTextCoordinates[index],
           x: newX
