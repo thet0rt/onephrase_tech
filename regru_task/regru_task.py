@@ -38,7 +38,7 @@ class CrmUpdatesHandler:
     def update_payment_date(cls, order_data, order_id):
         payment_datetime = cls.get_payment_date(order_data)
         if not payment_datetime:
-            PaymentStatusError(f'Не удалось получить payment_date по заказу {order_id}')
+            raise PaymentStatusError(f'Не удалось получить payment_date по заказу {order_id}')
         order = {
             'id': order_id,
             'customFields': {'real_date_of_payment': payment_datetime}
