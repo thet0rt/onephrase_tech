@@ -85,6 +85,32 @@ def sync_analytics_b2c_last_month():
     return 200, "Sync finished successfully"
 
 
+@celery.task
+def delete_old_files(directory: str, days: int = 10):
+    now = time.time()
+    cutoff = now - (days * 86400)  # 86400 секунд в дне
+
+    deleted_files = []
+
+    if not os.path.isdir(directory):
+        return f"Directory not found: {directory}"
+
+    for filename in os.listdir(directory):
+        file_path = os.path.join(directory, filename)
+
+        if os.path.isfile(file_path):
+            file_mtime = os.path.getmtime(file_path)
+
+            if file_mtime < cutoff:
+                try:
+                    os.remove(file_path)
+                    deleted_files.append(filename)
+                except Exception as e:
+                    print(f"Error deleting {file_path}: {e}")
+
+    return f"Deleted files: {deleted_files}"
+
+
 
 @celery.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
