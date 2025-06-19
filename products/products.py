@@ -128,7 +128,7 @@ class Products:
             )
 
     def generate_xlsx(self, index: int):
-        products_template = self.worksheet.get("A1:X163")
+        products_template = self.worksheet.get("A1:X169")
         titles = products_template[:1]
         rows = products_template[1:]
 
