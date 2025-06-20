@@ -189,7 +189,7 @@ def generate_images(data: dict) -> ProductData:
                     text_overlay.save('./test.png')
                 except Exception as e:
                     log.error(f"Ошибка при наложении текстового изображения: {e}")
-            image.save(output_path, "JPEG", quality=85, optimize=True)
+            image.save(output_path, "JPEG", quality=100, optimize=True)
             link_name = f"{product}_{color}"
             link = f'{os.getenv("SERVICE_URL")}/api/products/download_img/{filename}'
             links[link_name] = link
