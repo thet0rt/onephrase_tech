@@ -241,5 +241,8 @@ def check_tg_member(session_id):
 def add_tag_to_customer(arguments: dict):
     from regru_task.regru_task import CrmMethods
     crm_client = CrmMethods()
-    response = crm_client.edit_customer(arguments['customer_id'], delete=False, tag=arguments['tag'])
+    tags = arguments.get('tag').split(',')
+    response = crm_client.edit_customer(arguments['customer_id'],
+                                        delete=arguments.get('delete', False),
+                                        tags=tags)
     return jsonify({'response': response})

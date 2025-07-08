@@ -385,19 +385,19 @@ class CrmMethods:
             return response.get_response()['orders']
         log.error(response.get_error_msg())
 
-    def edit_customer(self, customer_id: int, delete: bool, tag: str):
+    def edit_customer(self, customer_id: int, delete: bool, tags: list):
         customer = {
             'id': customer_id,
         }
         if not delete:
             customer.update(
                 {
-                    'addTags': [tag]
+                    'addTags': tags
                 })
         else:
             customer.update(
                 {
-                    'removeTags': [tag]
+                    'removeTags': tags
                 }
             )
 
