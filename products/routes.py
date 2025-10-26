@@ -26,14 +26,8 @@ from .schemas import ImageRequestSchema
 @products_bp.route("/generate", methods=["POST"])
 @products_bp.arguments(ImageRequestSchema(many=True))
 def generate_images(data):
-    generate_product_xlsx.delay(data)
+    generate_product_xlsx.apply_async(args=[data], queue="high_priority")
     return jsonify({"message": "process started"})
-
-
-# # Раздача файлов (для тестирования)
-# @products_bp.route("/output/<filename>")
-# def get_generated_image(filename):
-#     return send_from_directory(UPLOAD_FOLDER, filename)
 
 
 @products_bp.get("/healthcheck")
