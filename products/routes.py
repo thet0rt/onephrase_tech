@@ -26,7 +26,7 @@ from .schemas import ImageRequestSchema
 @products_bp.route("/generate", methods=["POST"])
 @products_bp.arguments(ImageRequestSchema(many=True))
 def generate_images(data):
-    generate_product_xlsx.apply_async(args=[data], queue="high_priority")
+    generate_product_xlsx.apply_async(args=[data], queue="email")
     return jsonify({"message": "process started"})
 
 
