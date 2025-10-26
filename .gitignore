@@ -245,3 +245,4 @@ fabric.properties
 /.idea/vcs.xml
 .vscode/settings.json
 .DS_Store
+redis.conf
