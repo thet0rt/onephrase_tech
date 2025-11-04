@@ -109,6 +109,7 @@ export default {
       dragOffsetY: 0,
       backgroundImage: null,
       fontSize: 32,  // Начальный размер шрифта
+      currentEditingPhraseIndex: null, // индекс фразы, которую редактируем сейчас
     };
   },
   methods: {
@@ -119,10 +120,11 @@ export default {
       };
     },
     createCurrentPhraseData() {
-      return {
+      const coords = JSON.parse(JSON.stringify(this.imagesTextCoordinates))
+      const data = {
         items: this.images.map((image, index) => ({
           product: image.src,
-          coordinates: this.fixCoordinates(this.imagesTextCoordinates[index]),
+          coordinates: this.fixCoordinates(coords[index]),
           fontSize: this.imagesFontSizes[index],
           textWidth: this.measureTextWidth(this.phrase, this.imagesFontSizes[index]),
         })),
@@ -131,6 +133,7 @@ export default {
         design_number: this.designNumber,
         text: this.phrase
       };
+      return JSON.parse(JSON.stringify(data))
     },
     isDuplicate(data) {
       return this.phrasesDataList.some(
@@ -274,10 +277,11 @@ export default {
     },
     addPhrase() {
       const currentPhraseData = this.createCurrentPhraseData();
+      const snapshot = JSON.parse(JSON.stringify(currentPhraseData));
 
-      if (!this.isDuplicate(currentPhraseData)) {
-        this.phrasesDataList.push(currentPhraseData);
-        this.phraseCount++;
+      if (!this.isDuplicate(snapshot)) {
+        this.phrasesDataList.push(snapshot);
+        this.currentEditingPhraseIndex = this.phrasesDataList.length - 1; // теперь редактируем последнюю фразу
       }
 
       this.phraseCount = this.phrasesDataList.length;
@@ -401,31 +405,28 @@ export default {
     dragText(e) {
       if (!this.isDragging || !this.canvas || !this.backgroundImage) return;
 
-      // Получаем координаты canvas относительно окна браузера
       const rect = this.canvas.getBoundingClientRect();
       const scale = 0.5;
 
-      // Получаем координаты мыши внутри canvas с учетом масштаба
       let newX = (e.clientX - rect.left) / scale - this.dragOffsetX;
       let newY = (e.clientY - rect.top) / scale - this.dragOffsetY;
-
-      // Можно оставить расчет ширины текста, если вдруг понадобится ограничивать по ширине
-      const textWidth = this.ctx.measureText(this.phrase).width;
-      // newY ограничивать не нужно, разрешаем перемещение по всей высоте
 
       this.textX = newX;
       this.textY = newY;
 
-      // Сохраняем новые координаты в объекте imagesTextCoordinates
-      // Теперь обновляем не только x и y, но и фиксируем координаты для текущего редактируемого блока
+      // Обновляем координаты для выбранного изображения
       this.imagesTextCoordinates[this.selectedImageIndex] = {x: this.textX, y: this.textY};
-      // Также обновим координаты для текущей фразы в phrasesDataList, если она есть
-      if (this.phrasesDataList.length > 0 && this.selectedImageIndex !== null) {
-        const lastPhrase = this.phrasesDataList[this.phrasesDataList.length - 1];
-        if (lastPhrase && lastPhrase.items && lastPhrase.items[this.selectedImageIndex]) {
-          lastPhrase.items[this.selectedImageIndex].coordinates = {x: this.textX - 30, y: this.textY - 30};
-        }
-      }
+
+      // Обновляем координаты только в текущей редактируемой фразе
+      // if (this.currentEditingPhraseIndex != null) {
+      //   const phrase = this.phrasesDataList[this.currentEditingPhraseIndex];
+      //   if (phrase && phrase.items && phrase.items[this.selectedImageIndex]) {
+      //     phrase.items[this.selectedImageIndex].coordinates = {
+      //       x: this.textX - 30,
+      //       y: this.textY - 30
+      //     };
+      //   }
+      // }
 
       console.log("textX:", this.textX, "textY:", this.textY);
     },
