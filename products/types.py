@@ -6,3 +6,4 @@ class ProductData(TypedDict):
     links: Dict[str, str]
     design_number: str
     text: str
+    description_id: str

@@ -40,7 +40,7 @@ class Products:
         "sku": 1,  # design_number
         "category": 2,
         "title": 3,
-        "description": 4,  # useless
+        "description": 4,  # description_id
         "text": 5,  # useless
         "photo": 6,  # link
         "price": 7,  # useless
@@ -91,6 +91,11 @@ class Products:
             category = category.strip()
         return category
 
+    def get_description(self, description: str) -> str:
+        if description:
+            description = description.replace('@', self.product_data.get('description_id', ''))
+        return description
+
     def get_title(self, title: str):
         text = self.product_data["text"]
         while '\n' in text:
@@ -125,6 +130,9 @@ class Products:
             )
             row[self.column_mapping["categories"]] = self.get_category(
                 row[self.column_mapping["categories"]]
+            )
+            row[self.column_mapping["description"]] = self.get_description(
+                row[self.column_mapping["description"]]
             )
 
     def generate_xlsx(self, index: int):
@@ -200,6 +208,7 @@ def generate_images(data: dict) -> ProductData:
         category_2=data["category_2"],
         links=links,
         design_number=data["design_number"],
+        description_id = data["description_id"],
     )
     return product_data
 
@@ -229,7 +238,6 @@ def generate_csv(rows):
         writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         for row in rows:
             row += [""] * (len(header) - len(row))
-            # print(len(row))
             writer.writerow(row)
 
     print(f"CSV файл сохранён в {filename}")
@@ -255,89 +263,3 @@ def generate_product_xlsx(items):
     generate_csv(rows)
     log.info("Products file generated sucessfully")
     return 200, "Products file generated sucessfully"
-
-#
-# import cairo
-# import gi
-# gi.require_version('Pango', '1.0')
-# gi.require_version('PangoCairo', '1.0')
-# from gi.repository import Pango, PangoCairo
-#
-# import os
-#
-# def draw_text_with_cairo(
-#     text: str,
-#     font_path: str,
-#     font_size: int = 32,
-#     line_height: float = 1.0,
-#     letter_spacing: int = 0,
-#     text_color: str = "#FFFFFF",
-#     bg_color: str = "#000000",
-#     output_path: str = "output.png",
-#     surface_width: int = 500,
-#     surface_height: int = 200
-# ):
-#     # Проверяем что шрифт существует
-#     if not os.path.exists(font_path):
-#         raise FileNotFoundError(f"Font file not found: {font_path}")
-#
-#     # Создаем поверхность
-#     surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, surface_width, surface_height)
-#     ctx = cairo.Context(surface)
-#
-#     # Фон
-#     bg_r, bg_g, bg_b = hex_to_rgb(bg_color)
-#     ctx.set_source_rgb(bg_r, bg_g, bg_b)
-#     ctx.paint()
-#
-#     # Создаем Pango контекст
-#     layout = PangoCairo.create_layout(ctx)
-#
-#     # Настройка шрифта через FontDescription
-#     font_desc = Pango.FontDescription()
-#     font_name = load_font_to_system(font_path)
-#     font_desc.set_family(font_name)
-#     font_desc.set_absolute_size(font_size * Pango.SCALE)
-#     layout.set_font_description(font_desc)
-#
-#     # Настройка текста
-#     layout.set_text(text, -1)
-#
-#     # Letter-spacing
-#     attrs = Pango.AttrList()
-#     if letter_spacing:
-#         attr = Pango.attr_letter_spacing_new(letter_spacing * Pango.SCALE)  # Pango масштабирует
-#         attrs.insert(attr)
-#     layout.set_attributes(attrs)
-#
-#     # Line-spacing (Pango не очень удобно поддерживает line_height напрямую)
-#     # Можно частично управлять вручную через разбивку текста
-#
-#     # Цвет текста
-#     text_r, text_g, text_b = hex_to_rgb(text_color)
-#     ctx.set_source_rgb(text_r, text_g, text_b)
-#
-#     # Позиция (пока фиксированная, можно тоже параметризовать)
-#     x, y = 50, 50
-#     ctx.move_to(x, y)
-#
-#     # Рендер
-#     PangoCairo.show_layout(ctx, layout)
-#
-#     # Сохраняем
-#     surface.write_to_png(output_path)
-#
-# def load_font_to_system(font_path: str) -> str:
-#     """
-#     Регистрация шрифта во временной Fontconfig конфигурации.
-#     WARNING: Pango по-простому НЕ умеет грузить TTF напрямую, ему нужно имя шрифта.
-#     Поэтому тут предполагаем, что у тебя название файла примерно совпадает с font-family.
-#     """
-#     font_name = os.path.splitext(os.path.basename(font_path))[0]
-#     return font_name
-#
-# def hex_to_rgb(hex_color: str):
-#     """Преобразование HEX в нормализованные значения RGB"""
-#     hex_color = hex_color.lstrip('#')
-#     lv = len(hex_color)
-#     return tuple(int(hex_color[i:i + lv // 3], 16) / 255.0 for i in range(0, lv, lv // 3))

@@ -21,3 +21,4 @@ class ImageRequestSchema(Schema):
     category_2 = fields.Str(required=True)
     design_number = fields.Str(required=True)
     text = fields.Str(required=True)
+    description_id = fields.Str(required=True)

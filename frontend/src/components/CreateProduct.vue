@@ -24,6 +24,12 @@
         <h4 class="input__phrase__name">введите категории</h4>
         <input class="input__category" type="text" v-model="categories[0]" placeholder="категория">
         <input class="input__category" type="text" v-model="categories[1]" placeholder="категория">
+
+      </div>
+      <div class="container__input_phrase">
+        <h4 class="input__phrase__name">Введите description_id</h4>
+        <input class="input__phrase" type="number" v-model.number="description_id"
+               placeholder="description_id">
       </div>
       <div class="components">
         <div v-for="(item, index) in images" :key="index" class="img__button">
@@ -110,6 +116,7 @@ export default {
       backgroundImage: null,
       fontSize: 32,  // Начальный размер шрифта
       currentEditingPhraseIndex: null, // индекс фразы, которую редактируем сейчас
+      description_id: ""
     };
   },
   methods: {
@@ -131,7 +138,8 @@ export default {
         category_1: this.categories[0],
         category_2: this.categories[1],
         design_number: this.designNumber,
-        text: this.phrase
+        text: this.phrase,
+        description_id: this.description_id.toString()
       };
       return JSON.parse(JSON.stringify(data))
     },
@@ -274,6 +282,7 @@ export default {
       this.categories = ["", ""];
       this.phraseCount = 0;
       this.phrasesDataList = [];
+      this.description_id = "";
     },
     addPhrase() {
       const currentPhraseData = this.createCurrentPhraseData();
@@ -288,6 +297,7 @@ export default {
       this.phrase = "";
       this.designNumber = "";
       this.categories = ["", ""];
+      this.description_id = "";
     },
     openModal(index) {
       this.selectedImageIndex = index; // Сохраняем индекс выбранной картинки
