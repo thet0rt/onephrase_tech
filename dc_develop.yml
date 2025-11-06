@@ -12,13 +12,15 @@ services:
       - "5433:5432"
   redis:
     image: redis:alpine
-    command:
-      - redis-server
+    command: redis-server /usr/local/etc/redis/redis.conf
     env_file:
       - dev.env
     restart: on-failure
     volumes:
       - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+    ports:
+      - "6379:6379"
   app:
     build: .
 #    command: python appapp.py
