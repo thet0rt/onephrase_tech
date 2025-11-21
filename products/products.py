@@ -50,6 +50,13 @@ class Products:
         "external_id": 11,  # useless
         "parent_uid": 12,
         "categories": 13,
+        "characteristics": 14,
+        "weight": 15,
+        "length": 16,
+        "width": 17,
+        "height": 18,
+        "seo_title": 19,
+        "seo_descr": 20,
     }
 
     def __init__(self, product_data: ProductData):
@@ -103,6 +110,20 @@ class Products:
         title = title.replace("@new_phrase", text)
         return title
 
+    def get_seo_title(self, seo_title: str):
+        text = self.product_data["text"].capitalize()
+        while '\n' in text:
+            text = text.replace('\n', ' ')
+        seo_title = seo_title.replace("@new_phrase", text)
+        return seo_title
+
+    def get_seo_descr(self, seo_descr: str):
+        text = self.product_data["text"]
+        while '\n' in text:
+            text = text.replace('\n', ' ')
+        seo_title = seo_descr.replace("@new_phrase", text)
+        return seo_title
+
     def get_link(self, photo: str):
         link = self.product_data["links"].get(photo)
         if not link:
@@ -133,6 +154,12 @@ class Products:
             )
             row[self.column_mapping["description"]] = self.get_description(
                 row[self.column_mapping["description"]]
+            )
+            row[self.column_mapping["seo_title"]] = self.get_seo_title(
+                row[self.column_mapping["seo_title"]]
+            )
+            row[self.column_mapping["seo_descr"]] = self.get_seo_descr(
+                row[self.column_mapping["seo_descr"]]
             )
 
     def generate_xlsx(self, index: int):
