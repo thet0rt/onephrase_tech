@@ -155,15 +155,16 @@ class Products:
             row[self.column_mapping["description"]] = self.get_description(
                 row[self.column_mapping["description"]]
             )
-            row[self.column_mapping["seo_title"]] = self.get_seo_title(
-                row[self.column_mapping["seo_title"]]
-            )
-            row[self.column_mapping["seo_descr"]] = self.get_seo_descr(
-                row[self.column_mapping["seo_descr"]]
-            )
+            if len(row) > self.column_mapping["seo_title"]:
+                row[self.column_mapping["seo_title"]] = self.get_seo_title(
+                    row[self.column_mapping["seo_title"]]
+                )
+                row[self.column_mapping["seo_descr"]] = self.get_seo_descr(
+                    row[self.column_mapping["seo_descr"]]
+                )
 
     def generate_xlsx(self, index: int):
-        products_template = self.worksheet.get("A1:X169")
+        products_template = self.worksheet.get("A1:X176")
         titles = products_template[:1]
         rows = products_template[1:]
 
