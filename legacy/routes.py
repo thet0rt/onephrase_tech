@@ -241,7 +241,7 @@ def check_tg_member(session_id):
 def add_tag_to_customer(arguments: dict):
     from regru_task.regru_task import CrmMethods
     crm_client = CrmMethods()
-    tags = arguments.get('tag').split(',')
+    tags = arguments.get('tag').lower().split(',')
     response = crm_client.edit_customer(arguments['customer_id'],
                                         delete=arguments.get('delete', False),
                                         tags=tags)
