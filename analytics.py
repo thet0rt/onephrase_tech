@@ -9,7 +9,7 @@ from typing import Optional
 
 import logging
 from copy import deepcopy
-
+from db import r
 log = logging.getLogger(os.getenv('APP_NAME'))
 
 
@@ -494,7 +494,56 @@ class AnalyticsB2C:
         self.update_b2c_data(start=start_row)
         
         
+class PaymentCheck:
+    def __init__(self):
+        self.sh = self.get_spreadsheet()
+        self.worksheet = self.sh.worksheet(os.getenv("PAYMENT_WORKSHEET_NAME"))
+        self.client = retailcrm.v5(
+            os.getenv("RETAIL_CRM_URI"), os.getenv("RETAIL_CRM_TOKEN")
+        )
+
+    @staticmethod
+    def get_spreadsheet() -> Spreadsheet:
+        with open("google_creds.json", "r") as creds_file:
+            google_creds = json.load(creds_file)
+        gc = gspread.service_account_from_dict(google_creds)
+        sh = gc.open_by_key(os.getenv("PAYMENT_SPREADSHEET_CODE"))
+        return sh
+
+    def checker(self):
+        rows = self.worksheet.get_all_records(head=2)
+        rows_filtered = list(filter(lambda row: row.get("chek_otkrytiia_sformirovan") != "да", rows))
+        # for row in rows_filtered:
+        #     crm_order = self.client.order(uid=row.get('orderid'), site='new-onephrase-ru')
+        #     print(crm_order.get_response())
+
+        try:
+            crm_order = self.client.order(uid='1451551592', site='new-onephrase-ru').get_response()
+            # crm_order = self.client.order(uid='117043000712', site='new-onephrase-ru').get_response()
+        except Exception as exc:
+            log.exception(exc)
+            crm_order = {'errorMsg': 'Not found', 'success': False}
+
+        from pprint import pprint
+        pprint(crm_order)
+        if not crm_order.get('success'):
+            in_crm = 'Нет'
+        else:
+            real_date_of_payment = crm_order.get('order', {}).get('customFields', {}).get('real_date_of_payment')
+            chek_otkrytiia_sformirovan = crm_order.get('order', {}).get('customFields', {}).get('chek_otkrytiia_sformirovan')
+            nalichie_oshibki_pri_formirovanii_cheka = crm_order.get('order', {}).get('customFields', {}).get('nalichie_oshibki_pri_formirovanii_cheka')
+            chek_zakrytiia_sformirovan = crm_order.get('order', {}).get('customFields', {}).get('chek_zakrytiia_sformirovan')
+            print(f'real_date_of_payment={real_date_of_payment}')
+            print(f'chek_otkrytiia_sformirovan={chek_otkrytiia_sformirovan}')
+            print(f'nalichie_oshibki_pri_formirovanii_cheka={nalichie_oshibki_pri_formirovanii_cheka}')
+            print(f'chek_zakrytiia_sformirovan={chek_zakrytiia_sformirovan}')
+            payments = crm_order.get('order', {}).get('payments')
+            payment_status = 'Оплачен' if payments else 'нет информации'
+            print(f'payment_status={payment_status}')
+
+
 
 
 class AnalyticsException(Exception):
     pass
+

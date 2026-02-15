@@ -10,6 +10,7 @@ from flask import send_file, send_from_directory
 from flask_smorest import abort
 from werkzeug.utils import secure_filename
 
+import analytics
 from analytics import Analytics, AnalyticsB2C
 import logging
 from const import UPLOAD_FOLDER
@@ -246,3 +247,12 @@ def add_tag_to_customer(arguments: dict):
                                         delete=arguments.get('delete', False),
                                         tags=tags)
     return jsonify({'response': response})
+
+
+@legacy_bp.get('/payment_check')
+def payment_check():
+    r.set('payment_last_row', 2262)
+    payment_checker = analytics.PaymentCheck()
+    # print(payment_checker.get_new_rows())
+    payment_checker.checker()
+    return jsonify({'state': 'ok'})

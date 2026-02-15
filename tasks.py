@@ -85,6 +85,14 @@ def sync_analytics_b2c_last_month():
     return 200, "Sync finished successfully"
 
 
+@celery.task()
+def check_payment():
+    analytics = AnalyticsB2C(None, None)
+    analytics.sync_last_month()
+    log.info("Sync finished successfully")
+    return 200, "Sync finished successfully"
+
+
 # @celery.task
 # def delete_old_files(directory: str, days: int = 10):
 #     now = time.time()
