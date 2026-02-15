@@ -552,6 +552,7 @@ class PaymentCheck:
                 in_crm = 'Нет'
             else:
                 order_data = crm_order.get('order', {})
+                order_number = order_data.get('number')
                 custom = order_data.get('customFields', {})
                 in_crm = 'Да'
                 real_date_of_payment = custom.get('real_date_of_payment', '')
@@ -567,8 +568,9 @@ class PaymentCheck:
                 payment_status = 'Оплачен' if payments else 'нет информации'
 
             updates.append({
-                "range": f"C{idx}:H{idx}",
+                "range": f"C{idx}:I{idx}",
                 "values": [[
+                    order_number,
                     in_crm,
                     payment_status,
                     real_date_of_payment,

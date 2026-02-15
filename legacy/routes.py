@@ -18,7 +18,8 @@ from db import r
 from methods import handle_webhook_b2c, handle_webhook_b2b, allowed_file, humanize_exp_date, get_date_from_redis, \
     get_tg_id_by_session_id, check_if_chat_member_by_tg_id
 from regru_task.regru_task import TgIntegration, CrmUpdatesHandler
-from tasks import sync_analytics, create_links_from_photos, sync_analytics_b2c, sync_analytics_b2c_last_month
+from tasks import sync_analytics, create_links_from_photos, sync_analytics_b2c, sync_analytics_b2c_last_month, \
+    check_payment
 from . import legacy_bp
 from .schemas import AddTagSchema
 
@@ -251,6 +252,5 @@ def add_tag_to_customer(arguments: dict):
 
 @legacy_bp.get('/payment_check')
 def payment_check():
-    payment_checker = analytics.PaymentCheck()
-    payment_checker.checker()
-    return jsonify({'state': 'ok'})
+    check_payment.delay()
+    return jsonify({'state': 'check payment started'})

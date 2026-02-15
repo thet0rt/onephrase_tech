@@ -86,9 +86,11 @@ def sync_analytics_b2c_last_month():
     return 200, "Sync finished successfully"
 
 
-# @celery.task()
-# def check_payment():
-#     payment_checker = analytics.PaymentCheck
+@celery.task()
+def check_payment():
+    payment_checker = analytics.PaymentCheck()
+    payment_checker.checker()
+    return 200, "Check payment successfully"
 
 
 # @celery.task
@@ -128,6 +130,9 @@ def setup_periodic_tasks(sender, **kwargs):
     )
     sender.add_periodic_task(
         crontab(hour="*/1", minute=30), expire_old_links.s()  # every hour at 30 minutes
+    )
+    sender.add_periodic_task(
+        crontab(hour="*/1", minute=10), check_payment.s()  # every hour at 10 minutes
     )
     sender.add_periodic_task(
         crontab(minute="*/3"), handle_crm_updates.s()  # every 5 minutes
