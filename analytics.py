@@ -511,36 +511,75 @@ class PaymentCheck:
         return sh
 
     def checker(self):
-        rows = self.worksheet.get_all_records(head=2)
-        rows_filtered = list(filter(lambda row: row.get("chek_otkrytiia_sformirovan") != "да", rows))
-        # for row in rows_filtered:
-        #     crm_order = self.client.order(uid=row.get('orderid'), site='new-onephrase-ru')
-        #     print(crm_order.get_response())
+        values = self.worksheet.get_all_values()
 
-        try:
-            crm_order = self.client.order(uid='1451551592', site='new-onephrase-ru').get_response()
-            # crm_order = self.client.order(uid='117043000712', site='new-onephrase-ru').get_response()
-        except Exception as exc:
-            log.exception(exc)
-            crm_order = {'errorMsg': 'Not found', 'success': False}
+        headers = values[1]
+        rows = values[2:]
 
-        from pprint import pprint
-        pprint(crm_order)
-        if not crm_order.get('success'):
-            in_crm = 'Нет'
-        else:
-            real_date_of_payment = crm_order.get('order', {}).get('customFields', {}).get('real_date_of_payment')
-            chek_otkrytiia_sformirovan = crm_order.get('order', {}).get('customFields', {}).get('chek_otkrytiia_sformirovan')
-            nalichie_oshibki_pri_formirovanii_cheka = crm_order.get('order', {}).get('customFields', {}).get('nalichie_oshibki_pri_formirovanii_cheka')
-            chek_zakrytiia_sformirovan = crm_order.get('order', {}).get('customFields', {}).get('chek_zakrytiia_sformirovan')
-            print(f'real_date_of_payment={real_date_of_payment}')
-            print(f'chek_otkrytiia_sformirovan={chek_otkrytiia_sformirovan}')
-            print(f'nalichie_oshibki_pri_formirovanii_cheka={nalichie_oshibki_pri_formirovanii_cheka}')
-            print(f'chek_zakrytiia_sformirovan={chek_zakrytiia_sformirovan}')
-            payments = crm_order.get('order', {}).get('payments')
-            payment_status = 'Оплачен' if payments else 'нет информации'
-            print(f'payment_status={payment_status}')
+        updates = []
 
+        for idx, row_values in enumerate(rows, start=3):
+            row = dict(zip(headers, row_values))
+
+            date_str = row.get("Date", "").strip()
+            if not date_str:
+                continue
+
+            try:
+                row_date = datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                continue
+
+            if row_date.year < 2026:
+                continue
+
+            if row.get("chek_otkrytiia_sformirovan", "").strip().lower() == "да":
+                continue
+
+            order_id = row.get("orderid")
+
+            try:
+                crm_order = self.client.order(
+                    uid=order_id,
+                    site='new-onephrase-ru'
+                ).get_response()
+
+            except Exception as exc:
+                log.exception(exc)
+                crm_order = {'errorMsg': 'Not found', 'success': False}
+
+            if not crm_order.get('success'):
+                in_crm = 'Нет'
+            else:
+                order_data = crm_order.get('order', {})
+                custom = order_data.get('customFields', {})
+                in_crm = 'Да'
+                real_date_of_payment = custom.get('real_date_of_payment', '')
+                chek_otkrytiia_sformirovan = custom.get('chek_otkrytiia_sformirovan', '')
+                nalichie_oshibki_pri_formirovanii_cheka = custom.get(
+                    'nalichie_oshibki_pri_formirovanii_cheka', ''
+                )
+                chek_zakrytiia_sformirovan = custom.get(
+                    'chek_zakrytiia_sformirovan', ''
+                )
+
+                payments = order_data.get('payments')
+                payment_status = 'Оплачен' if payments else 'нет информации'
+
+            updates.append({
+                "range": f"C{idx}:H{idx}",
+                "values": [[
+                    in_crm,
+                    payment_status,
+                    real_date_of_payment,
+                    'да' if chek_otkrytiia_sformirovan else 'нет',
+                    'да' if nalichie_oshibki_pri_formirovanii_cheka else 'нет',
+                    'да' if chek_zakrytiia_sformirovan else 'нет',
+                ]]
+            })
+
+        if updates:
+            self.worksheet.batch_update(updates)
 
 
 

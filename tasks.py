@@ -5,6 +5,7 @@ from uuid import UUID
 
 from celery.schedules import crontab
 
+import analytics
 from analytics import Analytics, AnalyticsB2C
 from celery_settings import celery
 from creating_links import CreatingLinks
@@ -85,12 +86,9 @@ def sync_analytics_b2c_last_month():
     return 200, "Sync finished successfully"
 
 
-@celery.task()
-def check_payment():
-    analytics = AnalyticsB2C(None, None)
-    analytics.sync_last_month()
-    log.info("Sync finished successfully")
-    return 200, "Sync finished successfully"
+# @celery.task()
+# def check_payment():
+#     payment_checker = analytics.PaymentCheck
 
 
 # @celery.task

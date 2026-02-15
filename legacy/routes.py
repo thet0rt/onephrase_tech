@@ -251,8 +251,6 @@ def add_tag_to_customer(arguments: dict):
 
 @legacy_bp.get('/payment_check')
 def payment_check():
-    r.set('payment_last_row', 2262)
     payment_checker = analytics.PaymentCheck()
-    # print(payment_checker.get_new_rows())
     payment_checker.checker()
     return jsonify({'state': 'ok'})
