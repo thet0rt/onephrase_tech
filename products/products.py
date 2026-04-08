@@ -33,6 +33,9 @@ BLACK_COLOR_ITEMS = [('hoodie', 'milk'),
                      ('hoodie', 'melange'),
                      ('tshirt-basic', 'melange')]
 
+RED_COLOR_ITEMS = [('hoodie', 'softpink'), ('tshirt-trueover', 'softpink')]
+NAVY_COLOR_ITEMS = [('tshirt-trueover', 'skyblue')]
+
 
 class Products:
     column_mapping = {
@@ -164,7 +167,7 @@ class Products:
                 )
 
     def generate_xlsx(self, index: int):
-        products_template = self.worksheet.get("A1:X176")
+        products_template = self.worksheet.get("A1:X186")
         titles = products_template[:1]
         rows = products_template[1:]
 
@@ -185,6 +188,8 @@ def generate_images(data: dict) -> ProductData:
         font_size = item["fontSize"]
         text_image_white = item.get("text_image_white")
         text_image_black = item.get("text_image_black")
+        text_image_red = item.get("text_image_red")
+        text_image_navy = item.get("text_image_navy")
 
         folder_path = f"{UNPROCESSED_DIR}/{product}"
         objects = os.listdir(folder_path)
@@ -209,6 +214,10 @@ def generate_images(data: dict) -> ProductData:
             image = Image.open(input_path)
             if (product, color) in BLACK_COLOR_ITEMS:
                 text_image_base64 = text_image_black
+            elif (product, color) in RED_COLOR_ITEMS:
+                text_image_base64 = text_image_red
+            elif (product, color) in NAVY_COLOR_ITEMS:
+                text_image_base64 = text_image_navy
             else:
                 text_image_base64 = text_image_white
 

@@ -13,6 +13,8 @@ class TextOverlaySchema(Schema):
     textWidth = fields.Float(required=True)
     text_image_white = fields.Str(required=False)
     text_image_black = fields.Str(required=False)
+    text_image_navy = fields.Str(required=False)
+    text_image_red = fields.Str(required=False)
 
 
 class ImageRequestSchema(Schema):

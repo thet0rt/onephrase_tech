@@ -381,6 +381,22 @@ export default {
             useCORS: true
           });
           item.text_image_black = canvasBlack.toDataURL('image/png');
+          // темно-красный
+          tempDiv.style.color = '#80081B';
+          const canvasRed = await html2canvas(tempDiv, {
+            backgroundColor: null,
+            scale: 2,
+            useCORS: true
+          });
+          item.text_image_red = canvasRed.toDataURL('image/png');
+          // темно-красный
+          tempDiv.style.color = '#10366C';
+          const canvasNavy = await html2canvas(tempDiv, {
+            backgroundColor: null,
+            scale: 2,
+            useCORS: true
+          });
+          item.text_image_navy = canvasNavy.toDataURL('image/png');
         }
       }
 
