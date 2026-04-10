@@ -230,7 +230,10 @@ def generate_images(data: dict) -> ProductData:
                     # Уменьшаем изображение в 2 раза
                     new_size = (text_overlay.width // 2, text_overlay.height // 2)
                     text_overlay = text_overlay.resize(new_size, Image.Resampling.LANCZOS)
-                    image.paste(text_overlay, (x-30, y-30), text_overlay)
+                    box = (x-30, y-30)
+                    if (product, color) in RED_COLOR_ITEMS or (product, color) in NAVY_COLOR_ITEMS:
+                        box = (x - 45, y - 45)
+                    image.paste(text_overlay, box, text_overlay)
                     text_overlay.save('./test.png')
                 except Exception as e:
                     log.error(f"Ошибка при наложении текстового изображения: {e}")
