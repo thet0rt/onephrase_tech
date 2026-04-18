@@ -2,8 +2,8 @@ from marshmallow import Schema, fields, ValidationError
 
 
 class CoordinatesSchema(Schema):
-    x = fields.Int(required=True)
-    y = fields.Int(required=True)
+    x = fields.Float(required=True)
+    y = fields.Float(required=True)
 
 
 class TextOverlaySchema(Schema):

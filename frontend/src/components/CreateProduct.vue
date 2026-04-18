@@ -78,7 +78,6 @@
 
 
 <script>
-import html2canvas from 'html2canvas';
 
 export default {
   data() {
@@ -340,67 +339,65 @@ export default {
       };
       img.src = this.selectedImage;
     },
+    renderTextToCanvas(text, fontSize, color) {
+      const lines = text.replace(/<br\s*\/?>/gi, '\n').split('\n');
+      const fontFamily = 'OnePhraseFont';
+      const lineHeightRatio = 1.1;
+      const letterSpacing = 0.7;
+      const scale = 2;
+
+      // Измеряем ширину строки с учётом letter-spacing
+      const measureCtx = document.createElement('canvas').getContext('2d');
+      measureCtx.font = `${fontSize}px ${fontFamily}`;
+      const measureLine = (line) => {
+        if (!line) return 0;
+        let w = 0;
+        for (const ch of line) w += measureCtx.measureText(ch).width + letterSpacing;
+        return w;
+      };
+
+      const lineHeight = fontSize * lineHeightRatio;
+      const canvasWidth = Math.ceil(Math.max(...lines.map(measureLine), 1));
+      const canvasHeight = Math.ceil(lines.length * lineHeight);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = canvasWidth * scale;
+      canvas.height = canvasHeight * scale;
+
+      const ctx = canvas.getContext('2d');
+      ctx.scale(scale, scale);
+      ctx.font = `${fontSize}px ${fontFamily}`;
+      ctx.fillStyle = color;
+      ctx.textBaseline = 'top';
+
+      lines.forEach((line, i) => {
+        let x = 0;
+        const y = i * lineHeight;
+        for (const ch of line) {
+          ctx.fillText(ch, x, y);
+          x += ctx.measureText(ch).width + letterSpacing;
+        }
+      });
+
+      return canvas.toDataURL('image/png');
+    },
     async generateTextImagesForPhrases() {
-      const tempDiv = document.createElement('div');
-      tempDiv.style.position = 'absolute';
-      tempDiv.style.left = '-9999px';
-      tempDiv.style.top = '0';
-      tempDiv.style.width = '600px';
-      // // Центрирование текста физически через flexbox
-      tempDiv.style.display = 'flex';
-      tempDiv.style.justifyContent = 'left';
-      tempDiv.style.alignItems = 'center';
-      tempDiv.style.textAlign = 'center';
-      tempDiv.style.height = 'auto';
-      tempDiv.style.padding = '0';
-      tempDiv.style.margin = '0';
-      tempDiv.style.backgroundColor = 'transparent';
-      tempDiv.style.fontFamily = 'OnePhraseFont';
-      tempDiv.style.whiteSpace = 'pre-wrap';
-      tempDiv.style.lineHeight = '110%';
-      tempDiv.style.letterSpacing = '0.7px';
-      document.body.appendChild(tempDiv);
+      await document.fonts.ready;
+
+      const colorVariants = [
+        { key: 'text_image_white', value: 'white' },
+        { key: 'text_image_black', value: '#222222' },
+        { key: 'text_image_red',   value: '#80081B' },
+        { key: 'text_image_navy',  value: '#10366C' },
+      ];
 
       for (const phraseData of this.phrasesDataList) {
         for (const item of phraseData.items) {
-          tempDiv.style.fontSize = `${item.fontSize}px`;
-          tempDiv.innerText = phraseData.text;
-          // Белый вариант
-          tempDiv.style.color = 'white';
-          const canvasWhite = await html2canvas(tempDiv, {
-            backgroundColor: null,
-            scale: 2,
-            useCORS: true
-          });
-          item.text_image_white = canvasWhite.toDataURL('image/png');
-          // Черный вариант
-          tempDiv.style.color = '#222222';
-          const canvasBlack = await html2canvas(tempDiv, {
-            backgroundColor: null,
-            scale: 2,
-            useCORS: true
-          });
-          item.text_image_black = canvasBlack.toDataURL('image/png');
-          // темно-красный
-          tempDiv.style.color = '#80081B';
-          const canvasRed = await html2canvas(tempDiv, {
-            backgroundColor: null,
-            scale: 2,
-            useCORS: true
-          });
-          item.text_image_red = canvasRed.toDataURL('image/png');
-          // темно-красный
-          tempDiv.style.color = '#10366C';
-          const canvasNavy = await html2canvas(tempDiv, {
-            backgroundColor: null,
-            scale: 2,
-            useCORS: true
-          });
-          item.text_image_navy = canvasNavy.toDataURL('image/png');
+          for (const { key, value } of colorVariants) {
+            item[key] = this.renderTextToCanvas(phraseData.text, item.fontSize, value);
+          }
         }
       }
-
-      document.body.removeChild(tempDiv);
     },
     downloadImage(dataURL, filename) {
       const link = document.createElement('a');
