@@ -489,6 +489,9 @@ export default {
 
       console.log("textX:", this.textX, "textY:", this.textY);
     },
+    handleEscape(e) {
+      if (e.key === 'Escape' && this.isModalOpen) this.closeModal();
+    },
     stopDragging() {
       this.isDragging = false;
       // Убираем обработчики событий
@@ -503,6 +506,10 @@ export default {
         this.ctx = this.canvas.getContext("2d");
       }
     });
+    document.addEventListener("keydown", this.handleEscape);
+  },
+  beforeUnmount() {
+    document.removeEventListener("keydown", this.handleEscape);
   },
 };
 
