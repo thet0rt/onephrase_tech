@@ -1,55 +1,76 @@
 <template>
-  <div>
+  <div class="page-wrapper">
     <nav class="navbar">
-      <h1 class="logo__text">Onephrase.tech</h1>
+      <span class="logo__text">Onephrase.tech</span>
       <router-link to="/files" class="nav-link">Файлы</router-link>
     </nav>
-    <div class="main__content">
-      <div class="container__reset">
-        <button class="button__reset" @click="resetForm">Сбросить</button>
-      </div>
-      <div class="container__title">
-        <h1 class="title">>><br>Создать новый товар</h1>
-      </div>
-      <div class="container__input_phrase">
-        <h4 class="input__phrase__name">введите фразу</h4>
-        <textarea class='input__phrase' v-model="phrase" placeholder="Введите фразу"
-                  @blur="recalculateAllTextX"></textarea></div>
-      <div class="container__input_phrase">
-        <h4 class="input__phrase__name">введите номер дизайна</h4>
-        <input class="input__phrase" type="text" v-model="designNumber"
-               placeholder="введите номер дизайна">
-      </div>
-      <div class="container__input_phrase">
-        <h4 class="input__phrase__name">введите категории</h4>
-        <input class="input__category" type="text" v-model="categories[0]" placeholder="категория">
-        <input class="input__category" type="text" v-model="categories[1]" placeholder="категория">
 
+    <div class="main__content">
+      <div class="form-header">
+        <div>
+          <p class="form-eyebrow">Новый товар</p>
+          <h1 class="form-title">Создать карточку</h1>
+        </div>
+        <button class="btn btn--ghost btn--sm" @click="resetForm">Сбросить</button>
       </div>
-      <div class="container__input_phrase">
-        <h4 class="input__phrase__name">Введите description_id</h4>
-        <input class="input__phrase" type="number" v-model.number="description_id"
-               placeholder="description_id">
-      </div>
-      <div class="components">
-        <div v-for="(item, index) in images" :key="index" class="img__button">
-          <img class="component_image" :src="item.src" alt="">
-          <button class="button__change" @click="openModal(index)">изменить</button>
+
+      <div class="form-grid">
+        <div class="field field--full">
+          <label class="field__label">Фраза</label>
+          <textarea
+            class="field__input field__textarea"
+            v-model="phrase"
+            placeholder="Введите фразу..."
+            @blur="recalculateAllTextX"
+          ></textarea>
+        </div>
+
+        <div class="field">
+          <label class="field__label">Номер дизайна</label>
+          <input class="field__input" type="text" v-model="designNumber" placeholder="например, 42">
+        </div>
+
+        <div class="field">
+          <label class="field__label">Description ID</label>
+          <input class="field__input" type="number" v-model.number="description_id" placeholder="ID">
+        </div>
+
+        <div class="field field--full field--row">
+          <div class="field" style="flex:1">
+            <label class="field__label">Категория 1</label>
+            <input class="field__input" type="text" v-model="categories[0]" placeholder="категория">
+          </div>
+          <div class="field" style="flex:1">
+            <label class="field__label">Категория 2</label>
+            <input class="field__input" type="text" v-model="categories[1]" placeholder="категория">
+          </div>
         </div>
       </div>
-      <div class="getfile__container">
-        <p class="phrase__counter">количество фраз ({{ phraseCount }})</p>
-        <button class="button_bottom" @click="addPhrase">Добавить ещё фразу</button>
-        <button class="button_bottom" @click="generateFile">Сгенерировать файл</button>
+
+      <div class="section-label">Товары</div>
+      <div class="products-grid">
+        <div v-for="(item, index) in images" :key="index" class="product-card" @click="openModal(index)">
+          <img class="product-card__img" :src="item.src" alt="">
+          <div class="product-card__overlay">
+            <span class="product-card__edit-icon">✎</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-footer">
+        <span class="phrase-badge" v-if="phraseCount > 0">{{ phraseCount }} {{ phraseCount === 1 ? 'фраза' : phraseCount < 5 ? 'фразы' : 'фраз' }}</span>
+        <div class="footer-actions">
+          <button class="btn btn--secondary" @click="addPhrase">+ Добавить фразу</button>
+          <button class="btn btn--primary" @click="generateFile">Сгенерировать файл</button>
+        </div>
       </div>
     </div>
 
     <!-- Модальное окно -->
     <div v-if="isModalOpen" class="modal">
       <div class="modal__content">
-        <span class="close" @click="closeModal">&times;</span>
+        <button class="modal__close" @click="closeModal">&times;</button>
         <canvas ref="canvas" class="modal__canvas"></canvas>
-        <!-- Редактируемый текст -->
         <div :style="{
           transform: 'scale(0.5)',
           transformOrigin: 'top left',
@@ -57,18 +78,16 @@
           left: textX * 0.5 + 'px',
           top: textY * 0.5 + 'px'
         }">
-          <div v-if="isModalOpen" ref="editableText" class="editable-text" :style="{
-                      fontSize: fontSize + 'px'
-                  }" contenteditable="true" @mousedown="startDragging" @input="updateText"
-               @keydown="handleKeyDown"
-               @blur="saveText">
+          <div v-if="isModalOpen" ref="editableText" class="editable-text" :style="{ fontSize: fontSize + 'px' }"
+               contenteditable="true" @mousedown="startDragging" @input="updateText"
+               @keydown="handleKeyDown" @blur="saveText">
             {{ phrase }}
           </div>
         </div>
         <div class="font-size-controls">
-          <button @click="decreaseFontSize">Уменьшить шрифт</button>
-          <span class="fontDisplay">Размер шрифта: {{ fontSize }}px</span>
-          <button @click="increaseFontSize">Увеличить шрифт</button>
+          <button class="btn btn--ghost btn--sm" @click="decreaseFontSize">−</button>
+          <span class="font-display">{{ fontSize }}px</span>
+          <button class="btn btn--ghost btn--sm" @click="increaseFontSize">+</button>
         </div>
       </div>
       <div class="modal__backdrop" @click="closeModal"></div>
@@ -476,8 +495,6 @@ export default {
 </script>
 
 <style scoped>
-@import '@/assets/styles.css';
-
 @font-face {
   font-family: 'OnePhraseFont';
   src: url('@/assets/fonts/AvantGardeC_regular.otf') format('opentype');
@@ -486,105 +503,336 @@ export default {
   font-display: swap;
 }
 
-.modal__backdrop {
-  position: absolute;
+/* ── Layout ── */
+.page-wrapper {
   width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
+  min-height: 100vh;
+  background: #f5f5f7;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ── Navbar ── */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 32px;
+  height: 56px;
+  background: #1a1a1a;
+  position: sticky;
   top: 0;
-  left: 0;
-  z-index: 1;
-  pointer-events: auto;
+  z-index: 100;
 }
 
-.modal__content {
-  position: absolute;
-  background-color: white;
-  border: 1px solid black;
-  z-index: 2;
-  padding: 30px 30px 35px 30px;
-  border-radius: 8px;
+.logo__text {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
-.modal__canvas {
-  display: block;
-  border: 1px solid #000000;
-  padding: 0;
+.nav-link {
+  color: rgba(255,255,255,0.65);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+
+.nav-link:hover { color: #fff; }
+
+/* ── Card ── */
+.main__content {
+  max-width: 780px;
+  margin: 40px auto;
+  padding: 36px 40px 40px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
+}
+
+/* ── Form header ── */
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+}
+
+.form-eyebrow {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #999;
+}
+
+.form-title {
   margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  color: #111;
+  letter-spacing: -0.4px;
 }
 
+/* ── Form grid ── */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field--full { grid-column: 1 / -1; }
+.field--row { flex-direction: row; gap: 16px; align-items: flex-end; }
+
+.field__label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #666;
+}
+
+.field__input {
+  padding: 10px 14px;
+  font-size: 15px;
+  font-family: inherit;
+  border: 1.5px solid #e5e5e5;
+  border-radius: 8px;
+  background: #fafafa;
+  color: #111;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.field__input:focus {
+  border-color: #111;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+}
+
+.field__textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+}
+
+/* ── Section label ── */
+.section-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #666;
+  margin-bottom: 14px;
+}
+
+/* ── Products grid ── */
+.products-grid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 36px;
+}
+
+.product-card {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 1.5px solid #e8e8e8;
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.product-card:hover {
+  transform: translateY(-2px);
+  border-color: #111;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.product-card__img {
+  display: block;
+  width: 120px;
+  height: 144px;
+  object-fit: cover;
+}
+
+.product-card__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.product-card:hover .product-card__overlay {
+  background: rgba(0,0,0,0.35);
+}
+
+.product-card__edit-icon {
+  color: #fff;
+  font-size: 22px;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.product-card:hover .product-card__edit-icon {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ── Footer ── */
+.form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 24px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.phrase-badge {
+  margin-right: auto;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  background: #f0f0f0;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.footer-actions { display: flex; gap: 10px; }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 10px 20px;
+  transition: background 0.15s, opacity 0.15s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.btn:active { transform: scale(0.97); }
+
+.btn--primary {
+  background: #111;
+  color: #fff;
+}
+.btn--primary:hover { background: #333; }
+
+.btn--secondary {
+  background: #f0f0f0;
+  color: #111;
+}
+.btn--secondary:hover { background: #e5e5e5; }
+
+.btn--ghost {
+  background: transparent;
+  color: #555;
+  border: 1.5px solid #e0e0e0;
+}
+.btn--ghost:hover { background: #f5f5f5; color: #111; }
+
+.btn--sm { padding: 6px 14px; font-size: 13px; }
+
+/* ── Modal ── */
 .modal {
   display: flex;
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: transparent;
-  flex-direction: column;
+  inset: 0;
   justify-content: center;
   align-items: center;
-  padding: 20px;
-  gap: 10px;
   z-index: 1000;
 }
 
+.modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(2px);
+  z-index: 1;
+}
+
+.modal__content {
+  position: relative;
+  background: #fff;
+  border-radius: 12px;
+  padding: 36px 36px 44px;
+  z-index: 2;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+
+.modal__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: #f0f0f0;
+  color: #555;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.modal__close:hover { background: #e0e0e0; color: #111; }
+
+.modal__canvas {
+  display: block;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.font-size-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  justify-content: center;
+}
+
+.font-display {
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+  min-width: 56px;
+  text-align: center;
+}
+
+/* ── Editable text on canvas ── */
 .editable-text {
   position: absolute;
   cursor: move;
   user-select: none;
-  background-color: transparent;
-  border: none;
-  outline: none;
   color: white;
   text-align: center;
-  font-family: "OnePhraseFont", "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
-  font-size: 32px;
-  font-style: normal;
+  font-family: "OnePhraseFont", "Century Gothic", AppleGothic, sans-serif;
   font-weight: 400;
   line-height: 110%;
   letter-spacing: 0.7px;
-  cursor: move;
-  user-select: none;
-  background-color: transparent;
+  background: transparent;
   border: none;
   outline: none;
   white-space: pre;
-}
-
-.close {
-  font-size: 16px;
-  color: #333;
-  background-color: #f2f2f2;
-  border: none;
-  border-radius: 50%;
-  width: 16px;
-  height: 16px;
-  top: 5px;
-  left: 5px;
-  position: absolute;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: background-color 0.2s ease, transform 0.2s ease;
-  cursor: pointer;
-}
-
-.close:hover {
-  background-color: #ddd;
-  transform: scale(1.1);
-}
-
-.font-size-controls {
-  padding-top: 5px;
-  display: flex;
-  gap: 5px;
-  position: absolute;
-  left: 80px;
-  z-index: 5;
-}
-
-.fontDisplay {
-  color: black;
 }
 </style>
