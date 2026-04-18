@@ -66,6 +66,14 @@
       </div>
     </div>
 
+    <!-- Toast -->
+    <transition name="toast">
+      <div v-if="toast.visible" class="toast" :class="'toast--' + toast.type">
+        <span class="toast__icon">{{ toast.type === 'success' ? '✓' : '✕' }}</span>
+        <span class="toast__text">{{ toast.message }}</span>
+      </div>
+    </transition>
+
     <!-- Модальное окно -->
     <div v-if="isModalOpen" class="modal">
       <div class="modal__content">
@@ -105,6 +113,7 @@ export default {
       phrase: "",
       designNumber: "",
       categories: ["", ""],
+      toast: { visible: false, message: '', type: 'success', timer: null },
       phraseCount: 0,
       phrasesDataList: [],
       images: [
@@ -139,6 +148,11 @@ export default {
     };
   },
   methods: {
+    showToast(message, type = 'success') {
+      clearTimeout(this.toast.timer);
+      this.toast = { visible: true, message, type, timer: null };
+      this.toast.timer = setTimeout(() => { this.toast.visible = false; }, 3500);
+    },
     fixCoordinates(coordinates) {
       return {
         x: coordinates.x - 30,
@@ -192,11 +206,11 @@ export default {
         })
         .then(data => {
           console.log("Ответ от сервера:", data);
-          alert(data.message || "Процесс начат");
+          this.showToast(data.message || "Процесс начат");
         })
         .catch(error => {
           console.error("Ошибка при отправке данных:", error);
-          alert("Ошибка при генерации файла");
+          this.showToast("Ошибка при генерации файла", "error");
         });
     },
     showGeneratedData(data) {
@@ -817,6 +831,41 @@ export default {
   color: #444;
   min-width: 56px;
   text-align: center;
+}
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  z-index: 2000;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  max-width: 360px;
+}
+
+.toast--success { background: #1a1a1a; }
+.toast--error   { background: #c0392b; }
+
+.toast__icon {
+  font-size: 16px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.toast-enter-active, .toast-leave-active {
+  transition: opacity 0.25s, transform 0.25s;
+}
+.toast-enter-from, .toast-leave-to {
+  opacity: 0;
+  transform: translateY(12px);
 }
 
 /* ── Editable text on canvas ── */
