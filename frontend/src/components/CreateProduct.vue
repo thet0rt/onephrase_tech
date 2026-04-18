@@ -557,7 +557,7 @@ export default {
 
 /* ── Card ── */
 .main__content {
-  max-width: 780px;
+  max-width: 900px;
   margin: 40px auto;
   padding: 36px 40px 40px;
   background: #fff;
