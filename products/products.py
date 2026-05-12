@@ -303,3 +303,16 @@ def generate_product_xlsx(items):
     generate_csv(rows)
     log.info("Products file generated sucessfully")
     return 200, "Products file generated sucessfully"
+
+
+@celery.task()
+def generate_product_xlsx_panama(items):
+    rows = []
+    for i, data in enumerate(items):
+        product_data = generate_images(data)
+        product = Products(product_data)
+        new_rows = product.generate_xlsx(i)
+        rows = rows + new_rows
+    generate_csv(rows)
+    log.info("Panama products file generated successfully")
+    return 200, "Panama products file generated successfully"
