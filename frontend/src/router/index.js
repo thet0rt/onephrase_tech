@@ -4,6 +4,7 @@ import TextOnImageView from "../views/TextOnImageView.vue"
 import GoodsView from "../views/GoodsView.vue"
 import CreateProductView from "../views/CreateProductView.vue"
 import DownloadFilesView from "../views/DownloadFilesView.vue"
+import CreateNewProductView from "../views/CreateNewProductView.vue"
 
 
 
@@ -38,6 +39,11 @@ const router = createRouter({
       path: '/create_product',
       name: 'productCreation',
       component: CreateProductView
+    },
+    {
+      path: '/create_new_product',
+      name: 'newProductCreation',
+      component: CreateNewProductView
     },
     {
       path: '/files',
