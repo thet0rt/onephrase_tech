@@ -2,6 +2,7 @@
   <div>
     <nav class="navbar">
       <h1 class="logo__text">Onephrase.tech</h1>
+      <router-link to="/create_new_product" class="nav-link">Панамки и кепки</router-link>
       <router-link to="/files" class="nav-link">Файлы</router-link>
     </nav>
     <div class="main__content">
