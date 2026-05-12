@@ -62,9 +62,9 @@ class Products:
         "seo_descr": 20,
     }
 
-    def __init__(self, product_data: ProductData):
+    def __init__(self, product_data: ProductData, worksheet_name: str):
         self.sh = self.get_spreadsheet()
-        self.worksheet = self.sh.worksheet(os.getenv("WORKSHEET_NAME_PRODUCTS"))
+        self.worksheet = self.sh.worksheet(worksheet_name)
         self.product_data = product_data
         self.parent_uids = {}
 
@@ -297,7 +297,7 @@ def generate_product_xlsx(items):
     for i, data in enumerate(items):
         add_additional_products(data)
         product_data = generate_images(data)
-        product = Products(product_data)
+        product = Products(product_data, os.getenv("WORKSHEET_NAME_PRODUCTS"))
         new_rows = product.generate_xlsx(i)
         rows = rows + new_rows
     generate_csv(rows)
@@ -310,7 +310,7 @@ def generate_product_xlsx_panama(items):
     rows = []
     for i, data in enumerate(items):
         product_data = generate_images(data)
-        product = Products(product_data)
+        product = Products(product_data, os.getenv("WORKSHEET_NAME_CAPS"))
         new_rows = product.generate_xlsx(i)
         rows = rows + new_rows
     generate_csv(rows)
