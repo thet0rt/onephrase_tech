@@ -11,7 +11,7 @@ from flask_smorest import abort
 
 from products.const import PROCESSED_DIR, XLSX_FILES_DIR
 
-from .products import generate_product_xlsx
+from .products import generate_product_xlsx, generate_product_xlsx_panama
 
 
 import logging
@@ -27,6 +27,13 @@ from .schemas import ImageRequestSchema
 @products_bp.arguments(ImageRequestSchema(many=True))
 def generate_images(data):
     generate_product_xlsx.apply_async(args=[data], queue="email")
+    return jsonify({"message": "process started"})
+
+
+@products_bp.route("/generate_panama", methods=["POST"])
+@products_bp.arguments(ImageRequestSchema(many=True))
+def generate_images_panama(data):
+    generate_product_xlsx_panama.apply_async(args=[data], queue="email")
     return jsonify({"message": "process started"})
 
 
