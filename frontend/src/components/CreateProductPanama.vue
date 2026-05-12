@@ -91,12 +91,14 @@ export default {
       images: [
         {src: "panama_1.png", bigSrc: "panama_1_big.png"},
         {src: "panama_2.png", bigSrc: "panama_2_big.png"},
+        {src: "cap.png", bigSrc: "cap_big.png"},
       ],
       imagesTextCoordinates: [
         {x: 185, y: 600},
         {x: 185, y: 600},
+        {x: 185, y: 600},
       ],
-      imagesFontSizes: [32, 32],
+      imagesFontSizes: [38, 38, 38],
       selectedImageIndex: null,
       isModalOpen: false,
       selectedImage: "",
