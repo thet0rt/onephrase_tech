@@ -62,11 +62,12 @@ class Products:
         "seo_descr": 20,
     }
 
-    def __init__(self, product_data: ProductData, worksheet_name: str):
+    def __init__(self, product_data: ProductData, worksheet_name: str, worksheet_interval: str):
         self.sh = self.get_spreadsheet()
         self.worksheet = self.sh.worksheet(worksheet_name)
         self.product_data = product_data
         self.parent_uids = {}
+        self.worksheet_interval = worksheet_interval
 
     @staticmethod
     def get_spreadsheet() -> Spreadsheet:
@@ -167,7 +168,7 @@ class Products:
                 )
 
     def generate_xlsx(self, index: int):
-        products_template = self.worksheet.get("A1:X186")
+        products_template = self.worksheet.get(self.worksheet_interval)
         titles = products_template[:1]
         rows = products_template[1:]
 
@@ -297,7 +298,7 @@ def generate_product_xlsx(items):
     for i, data in enumerate(items):
         add_additional_products(data)
         product_data = generate_images(data)
-        product = Products(product_data, os.getenv("WORKSHEET_NAME_PRODUCTS"))
+        product = Products(product_data, os.getenv("WORKSHEET_NAME_PRODUCTS"), os.getenv("WORKSHEET_INTERVAL_PRODUCTS"))
         new_rows = product.generate_xlsx(i)
         rows = rows + new_rows
     generate_csv(rows)
@@ -310,7 +311,7 @@ def generate_product_xlsx_panama(items):
     rows = []
     for i, data in enumerate(items):
         product_data = generate_images(data)
-        product = Products(product_data, os.getenv("WORKSHEET_NAME_CAPS"))
+        product = Products(product_data, os.getenv("WORKSHEET_NAME_CAPS"), os.getenv("WORKSHEET_INTERVAL_CAPS"))
         new_rows = product.generate_xlsx(i)
         rows = rows + new_rows
     generate_csv(rows)
