@@ -123,8 +123,8 @@ export default {
       phraseCount: 0,
       phrasesDataList: [],
       images: [
-        {src: "panama_1.png", bigSrc: "panama_1_big.png"},
-        {src: "panama_2.png", bigSrc: "panama_2_big.png"},
+        {src: "panama.png", bigSrc: "panama_big.png"},
+        {src: "panama-unrolled.png", bigSrc: "panama-unrolled_big.png"},
       ],
       imagesTextCoordinates: [
         {x: 185, y: 600},

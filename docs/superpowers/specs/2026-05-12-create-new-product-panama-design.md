@@ -14,8 +14,8 @@ A new tab `/create_new_product` identical in functionality to `/create_product` 
 **`frontend/src/components/CreateProductPanama.vue`**  
 Full copy of `CreateProduct.vue` with the following changes:
 - `images` array contains exactly 2 items:
-  - `{src: "panama_1.png", bigSrc: "panama_1_big.png"}`
-  - `{src: "panama_2.png", bigSrc: "panama_2_big.png"}`
+  - `{src: "panama.png", bigSrc: "panama_big.png"}`
+  - `{src: "panama-unrolled.png", bigSrc: "panama-unrolled_big.png"}`
 - `imagesTextCoordinates`: default starting coordinates for panama hats (e.g. `[{x: 185, y: 600}, {x: 185, y: 600}]`) — adjustable via drag in the modal editor
 - `imagesFontSizes`: `[32, 32]`
 - API call in `generateFile()` targets `/api/products/generate_panama` instead of `/api/products/generate`
