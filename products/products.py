@@ -129,9 +129,16 @@ class Products:
         return seo_title
 
     def get_link(self, photo: str):
-        link = self.product_data["links"].get(photo)
+        photo_list = photo.split('/n')
+        photo_list_links = []
+        for _photo in photo_list:
+            photo_link = self.product_data["links"].get(_photo)
+            photo_list_links.append(photo_link)
+        link = ' '.join(photo_list_links)
+        # link = self.product_data["links"].get(photo)
         if not link:
             log.warning(f"No link found for product: {photo}")
+            link = None
         return link
 
     def fill_xlsx_template(self, template: List[list]):
@@ -181,7 +188,12 @@ class Products:
 
 def generate_images(data: dict) -> ProductData:
     results = []
-    links = {}
+    links = {
+        'cap_info': f'{os.getenv("SERVICE_URL")}/api/products/download_img/cap_info.jpg',
+        'cap_life': f'{os.getenv("SERVICE_URL")}/api/products/download_img/cap_life.jpg',
+        'panama_info': f'{os.getenv("SERVICE_URL")}/api/products/download_img/panama_info.jpg',
+        'panama_life': f'{os.getenv("SERVICE_URL")}/api/products/download_img/panama_life.jpg'
+    }
     text = data["text"]
     for item in data["items"]:
         product = item["product"].split(".")[0]
