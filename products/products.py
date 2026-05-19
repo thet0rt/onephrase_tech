@@ -129,11 +129,18 @@ class Products:
         return seo_title
 
     def get_link(self, photo: str):
-        photo_list = photo.split('/n')
+        photo_list = photo.split(';')
         photo_list_links = []
+        print(photo_list)
+        from pprint import pprint
+        pprint(self.product_data["links"])
         for _photo in photo_list:
+            print(_photo)
             photo_link = self.product_data["links"].get(_photo)
             photo_list_links.append(photo_link)
+        print(photo_list_links)
+        if not photo_list_links or photo_list_links[0] is None:
+            return None
         link = ' '.join(photo_list_links)
         # link = self.product_data["links"].get(photo)
         if not link:

@@ -37,5 +37,5 @@ def remove_transparency(im, bg_color=(255, 255, 255)):
         return im.convert('RGB')
 
 
-resize_image('panama_black2 (2).png',
-             'products/initial_images/panama-unrolled/black.jpg')
+resize_image('cap_softblue.png',
+             'products/initial_images/cap/softblue.jpg')
