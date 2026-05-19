@@ -136,7 +136,7 @@ class Products:
         pprint(self.product_data["links"])
         for _photo in photo_list:
             print(_photo)
-            photo_link = self.product_data["links"].get(_photo)
+            photo_link = self.product_data["links"].get(_photo, '')
             photo_list_links.append(photo_link)
         print(photo_list_links)
         if not photo_list_links or photo_list_links[0] is None:
