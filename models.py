@@ -62,3 +62,41 @@ class Category(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     description = db.Column(db.String(255), nullable=True)
     type = db.Column(db.Enum(CategoryType, name='category_type'), nullable=False)
+
+
+class ContestStatus(BaseEnum):
+    ACTIVE = 'active'
+    INACTIVE = 'inactive'
+
+
+class Contest(db.Model):
+    __tablename__ = 'contests'
+
+    id = db.Column(db.Integer(), primary_key=True)
+    code = db.Column(db.String(100), nullable=False, unique=True)
+    status = db.Column(db.Enum(ContestStatus, name='contest_status'), nullable=False, default=ContestStatus.ACTIVE)
+    started_at = db.Column(db.DateTime(), nullable=False)
+    ended_at = db.Column(db.DateTime(), nullable=True)
+
+    participants = db.relationship('Participant', backref='contest', lazy='dynamic')
+
+    def __repr__(self):
+        return f"<Contest {self.code}>"
+
+
+class Participant(db.Model):
+    __tablename__ = 'participants'
+
+    id = db.Column(db.Integer(), primary_key=True)
+    contest_id = db.Column(db.Integer(), db.ForeignKey('contests.id'), nullable=False)
+    messenger_id = db.Column(db.String(100), nullable=False)
+    display_name = db.Column(db.String(255), nullable=True)
+    number = db.Column(db.Integer(), nullable=False)
+    registered_at = db.Column(db.DateTime(), nullable=False)
+
+    __table_args__ = (
+        db.UniqueConstraint('contest_id', 'messenger_id', name='uq_contest_participant'),
+    )
+
+    def __repr__(self):
+        return f"<Participant {self.messenger_id} in contest {self.contest_id}>"
