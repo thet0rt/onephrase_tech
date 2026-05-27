@@ -33,13 +33,19 @@ def register():
     code = _normalise_code(raw_code)
 
     try:
+        early_response = None
+        is_new_contest = False
+        number = None
+        contest_code = None
+        started_at_iso = None
+        registered_at_iso = None
+
         with db.session.begin():
             stmt = db.select(Contest).filter_by(code=code)
             if db.engine.dialect.name != 'sqlite':
                 stmt = stmt.with_for_update()
             contest = db.session.execute(stmt).scalar_one_or_none()
 
-            is_new_contest = False
             if contest is None:
                 contest = Contest(
                     code=code,
@@ -50,35 +56,37 @@ def register():
                 db.session.flush()
                 is_new_contest = True
             elif contest.status == ContestStatus.INACTIVE:
-                return jsonify({'status': 'closed'})
+                early_response = jsonify({'status': 'closed'})
 
-            existing = db.session.execute(
-                db.select(Participant).filter_by(
-                    contest_id=contest.id,
-                    messenger_id=messenger_id
-                )
-            ).scalar_one_or_none()
+            if early_response is None:
+                existing = db.session.execute(
+                    db.select(Participant).filter_by(
+                        contest_id=contest.id,
+                        messenger_id=messenger_id
+                    )
+                ).scalar_one_or_none()
 
-            if existing:
-                return jsonify({'status': 'exists', 'number': existing.number})
+                if existing:
+                    early_response = jsonify({'status': 'exists', 'number': existing.number})
+                else:
+                    count = db.session.execute(
+                        db.select(db.func.count(Participant.id)).filter_by(contest_id=contest.id)
+                    ).scalar()
+                    number = count + 1
+                    participant = Participant(
+                        contest_id=contest.id,
+                        messenger_id=messenger_id,
+                        display_name=display_name,
+                        number=number,
+                        registered_at=datetime.utcnow()
+                    )
+                    db.session.add(participant)
+                    contest_code = contest.code
+                    started_at_iso = contest.started_at.isoformat()
+                    registered_at_iso = participant.registered_at.isoformat()
 
-            count = db.session.execute(
-                db.select(db.func.count(Participant.id)).filter_by(contest_id=contest.id)
-            ).scalar()
-
-            number = count + 1
-            participant = Participant(
-                contest_id=contest.id,
-                messenger_id=messenger_id,
-                display_name=display_name,
-                number=number,
-                registered_at=datetime.utcnow()
-            )
-            db.session.add(participant)
-
-            contest_code = contest.code
-            started_at_iso = contest.started_at.isoformat()
-            registered_at_iso = participant.registered_at.isoformat()
+        if early_response is not None:
+            return early_response
 
         if is_new_contest:
             init_contest_sheet_task.delay(contest_code, started_at_iso)

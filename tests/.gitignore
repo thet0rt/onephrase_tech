@@ -1,4 +1,6 @@
 # Ignore every file in this folder
 *
-# Except this one
+# Except these
 !.gitignore
+!conftest.py
+!test_contest.py

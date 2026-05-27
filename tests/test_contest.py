@@ -10,14 +10,7 @@ def app():
     flask_app.config['TESTING'] = True
     flask_app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
     flask_app.config['WTF_CSRF_ENABLED'] = False
-    # Re-initialize SQLAlchemy with the new (SQLite) URI because init_app
-    # reads config at call time and caches the engine; changes after that
-    # have no effect. We must clear the old engine cache first.
     flask_app.extensions.pop('sqlalchemy', None)
-    if flask_app in _db._app_engines:
-        for engine in _db._app_engines[flask_app].values():
-            engine.dispose()
-        del _db._app_engines[flask_app]
     _db.init_app(flask_app)
     with flask_app.app_context():
         _db.create_all()
