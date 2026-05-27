@@ -78,7 +78,7 @@ class Contest(db.Model):
     started_at = db.Column(db.DateTime(), nullable=False)
     ended_at = db.Column(db.DateTime(), nullable=True)
 
-    participants = db.relationship('Participant', backref='contest', lazy='dynamic')
+    participants = db.relationship('Participant', backref='contest')
 
     def __repr__(self):
         return f"<Contest {self.code}>"
