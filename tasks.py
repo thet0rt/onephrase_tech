@@ -13,6 +13,7 @@ import logging
 from methods import get_date_from_redis
 from db import r
 from regru_task.regru_task import CrmUpdatesHandler
+from contest.sheets import init_contest_sheet, append_participant
 
 log = logging.getLogger(os.getenv('APP_NAME'))
 
@@ -118,6 +119,25 @@ def check_payment():
 #
 #     return f"Deleted files: {deleted_files}"
 
+
+@celery.task(bind=True, max_retries=3, default_retry_delay=30)
+def sync_participant_to_sheets(self, code: str, number: int, messenger_id: str, display_name: str, registered_at_iso: str):
+    from datetime import datetime
+    try:
+        registered_at = datetime.fromisoformat(registered_at_iso)
+        append_participant(code, number, messenger_id, display_name, registered_at)
+    except Exception as exc:
+        raise self.retry(exc=exc)
+
+
+@celery.task(bind=True, max_retries=3, default_retry_delay=30)
+def init_contest_sheet_task(self, code: str, started_at_iso: str):
+    from datetime import datetime
+    try:
+        started_at = datetime.fromisoformat(started_at_iso)
+        init_contest_sheet(code, started_at)
+    except Exception as exc:
+        raise self.retry(exc=exc)
 
 
 @celery.on_after_finalize.connect
