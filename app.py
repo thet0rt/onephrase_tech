@@ -15,6 +15,7 @@ from models import User
 from money import money_bp
 from products import products_bp
 from contest import contest_bp
+import contest.routes  # noqa: F401 — registers routes on contest_bp
 
 app = Flask(__name__)
 
