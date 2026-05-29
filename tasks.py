@@ -119,7 +119,7 @@ def check_payment():
 #     return f"Deleted files: {deleted_files}"
 
 
-@celery.task(bind=True, max_retries=3, default_retry_delay=30)
+@celery.task(bind=True, max_retries=3, default_retry_delay=30, queue='email')
 def sync_participant_to_sheets(self, code: str, number: int, messenger_id: str, display_name: str, registered_at_iso: str):
     try:
         registered_at = datetime.fromisoformat(registered_at_iso)
@@ -128,7 +128,7 @@ def sync_participant_to_sheets(self, code: str, number: int, messenger_id: str, 
         raise self.retry(exc=exc)
 
 
-@celery.task(bind=True, max_retries=3, default_retry_delay=30)
+@celery.task(bind=True, max_retries=3, default_retry_delay=30, queue='email')
 def init_contest_sheet_task(self, code: str, started_at_iso: str):
     try:
         started_at = datetime.fromisoformat(started_at_iso)
