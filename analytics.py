@@ -533,7 +533,7 @@ class PaymentCheck:
             if row_date.year < 2026:
                 continue
 
-            if row.get("chek_otkrytiia_sformirovan", "").strip().lower() == "да":
+            if row.get("chek_zakrytiia_sformirovan", "").strip().lower() == "да":
                 continue
 
             order_id = row.get("orderid")
