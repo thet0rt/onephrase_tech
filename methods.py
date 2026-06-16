@@ -149,7 +149,7 @@ def humanize_exp_date(exp_date):
 def get_session_data(session_id) -> Optional[dict]:
     url = f'https://console.bot-marketing.com/api/public/tunnelSessions/{session_id}'
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=10)
         response.raise_for_status()
         session_data = response.json()
     except Exception as exc:
@@ -169,7 +169,7 @@ def get_tg_id_by_session_id(session_id):
 def check_if_chat_member_by_tg_id(tg_id) -> Optional[bool]:
     url = f'{os.getenv("tg_chat_member_link")}{tg_id}'
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=10)
         response.raise_for_status()
         tg_data = response.json()
         if not tg_data.get('ok'):
