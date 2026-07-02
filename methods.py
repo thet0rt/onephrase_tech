@@ -170,11 +170,7 @@ def check_if_chat_member_by_tg_id(tg_id) -> Optional[bool]:
     url = f'{os.getenv("tg_chat_member_link")}{tg_id}'
     try:
         response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        tg_data = response.json()
-        if not tg_data.get('ok'):
-            return
-        status = tg_data.get('result', {}).get('status')
-        return status in ('member', 'creator')
+        response.raise_for_status()          # 502 (проверка не удалась) → в except → None
+        return response.json().get('result')  # {"result": true/false}
     except Exception as exc:
         log.exception(exc)
